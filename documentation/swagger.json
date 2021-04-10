@@ -2340,7 +2340,7 @@
 				}
 			}
 		},
-		"/moderator/interests/{id}": {
+		"/moderator/interests/delete/{id}": {
 			"delete": {
 				"tags": ["interests"],
 				"summary": "deletes interest by id",
@@ -2375,7 +2375,7 @@
 				"produces": ["application/json"]
 			}
 		},
-		"/moderator/interests/{id}": {
+		"/moderator/interests/update/{id}": {
 			"put": {
 				"tags": ["interests"],
 				"summary": "moderator can edit interest by id",
