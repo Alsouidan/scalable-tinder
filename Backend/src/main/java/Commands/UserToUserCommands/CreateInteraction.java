@@ -8,8 +8,8 @@ public class CreateInteraction extends ConcreteCommand {
     public void setParameters() {
         storedProcedure = "\"uspCreateInteraction\"";
         inputParams = new String[]{"interactionData.source_user_id",
-                                    "interactionData.target_user_id",
-                                    "interactionData.type"};
+                                "interactionData.target_user_id",
+                                "interactionData.type"};
         outputName = "interaction";
     }
 }
