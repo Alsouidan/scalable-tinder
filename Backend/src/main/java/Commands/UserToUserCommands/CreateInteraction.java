@@ -1,4 +1,4 @@
-package Commands.UserCommands;
+package Commands.UserToUserCommands;
 
 import Interface.ConcreteCommand;
 
