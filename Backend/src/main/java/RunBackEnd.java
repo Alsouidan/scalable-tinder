@@ -7,6 +7,7 @@ import MessageQueue.ServicesMQ;
 import Entities.ServicesType;
 import NettyWebServer.NettyServer;
 import Controller.Controller;
+import Interface.ServiceControllerSocket;
 
 import java.util.logging.Level;
 
@@ -61,8 +62,14 @@ public class RunBackEnd {
                     for(ServicesType type:services) {
                         for(int i =0;i<getInitialInstanceNum(type);i++) {
                             ServiceControl s = c.initService(type);
+                            ServiceControllerSocket socket = new ServiceControllerSocket(s.getService_port(),s);
                             new Thread(() -> {
                                 s.start();
+                                try {
+                                    socket.start();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                             }).start();
                             try {
                                 Thread.sleep(200);

@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class ControlMessage implements Serializable {
 
+    
 
 
     @Override
@@ -12,26 +13,26 @@ public class ControlMessage implements Serializable {
         return Objects.hash(controlCommand, param, path);
     }
 
-    private ControlCommand controlCommand;
+    private String controlCommand;
     private String param;
     private String path;
 
-    public ControlMessage(ControlCommand controlCommand){
+    public ControlMessage(String controlCommand){
         this.controlCommand = controlCommand;
     }
 
-    public ControlMessage(ControlCommand controlCommand, String param){
+    public ControlMessage(String controlCommand, String param){
         this.controlCommand = controlCommand;
         this.param = param;
     }
 
-    public ControlMessage(ControlCommand controlCommand, String param, String path) {
+    public ControlMessage(String controlCommand, String param, String path) {
         this.controlCommand = controlCommand;
         this.param = param;
         this.path = path;
     }
 
-    public ControlCommand getControlCommand() {
+    public String getControlCommand() {
         return controlCommand;
     }
 

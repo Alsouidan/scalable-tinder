@@ -7,6 +7,7 @@ import Database.ArangoInstance;
 import Database.PostgreSQL;
 import Interface.ServiceControl;
 import MediaServer.MinioInstance;
+import io.netty.channel.ChannelHandlerContext;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -56,4 +57,7 @@ public class ChatService extends ServiceControl{
     public static void main(String[] args) {
         new ChatService(0).start();
     }
+
+
+
 }

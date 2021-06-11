@@ -10,6 +10,7 @@ import Config.ConfigTypes;
 import Controller.Controller;
 import Database.ArangoInstance;
 import Database.PostgreSQL;
+import Entities.ControlMessage;
 import Entities.ErrorLog;
 import Entities.MediaServerRequest;
 import Entities.MediaServerResponse;
@@ -17,11 +18,14 @@ import MediaServer.MediaHandler;
 import MediaServer.MinioInstance;
 import NettyWebServer.NettyServerInitializer;
 import com.rabbitmq.client.*;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
+import io.netty.util.CharsetUtil;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -49,9 +53,9 @@ import static io.netty.buffer.Unpooled.copiedBuffer;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-public abstract class ServiceControl {    // This class is responsible for Managing Each Service (Application) Fully (Queue (Reuqest/Response), Controller etc.)
+public abstract class ServiceControl extends SimpleChannelInboundHandler {    // This class is responsible for Managing Each Service (Application) Fully (Queue (Reuqest/Response), Controller etc.)
 
-    public int ID;
+    public int service_port;
     protected Config conf = Config.getInstance();
     protected int maxDBConnections = conf.getServiceMaxDbConnections();
     protected String RPC_QUEUE_NAME; //set by init
@@ -59,6 +63,15 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 //    protected RLiveObjectService liveObjectService; // For Post Only
     protected ArangoInstance arangoInstance; // For Post Only
     protected MinioInstance minioInstance;
+
+    public int getService_port() {
+        return service_port;
+    }
+
+    public void setService_port(int service_port) {
+        this.service_port = service_port;
+    }
+
     protected PostgreSQL postgresDB;
     private final String RESPONSE_EXTENSION = "-Response";
     private final String REQUEST_EXTENSION = "-Request";
@@ -81,14 +94,14 @@ public abstract class ServiceControl {    // This class is responsible for Manag
     private Class last_com;
     public final Logger LOGGER = Logger.getLogger(ServiceControl.class.getName()) ;
     protected RedisConnection redis;
-
-    public ServiceControl(int ID) {
+    
+    public ServiceControl(int service_port) {
         this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsNo);
         init();
 //        initDB();
         REQUEST_QUEUE_NAME = RPC_QUEUE_NAME + REQUEST_EXTENSION;
         RESPONSE_QUEUE_NAME = RPC_QUEUE_NAME + RESPONSE_EXTENSION;
-        this.ID = ID;
+        this.service_port = service_port;
 //        redis = new RedisConnection();
     }
 
@@ -108,7 +121,81 @@ public abstract class ServiceControl {    // This class is responsible for Manag
         consumeFromRequestQueue();
         consumeFromResponseQueue();
     }
+    @Override
+    public void channelActive(ChannelHandlerContext channelHandlerContext){
+        channelHandlerContext.writeAndFlush(Unpooled.copiedBuffer("Netty Rocks!", CharsetUtil.UTF_8));
+    }
 
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx, Object in) {
+        ControlMessage msg = (ControlMessage)in;
+        String command = msg.getControlCommand();
+        String param = msg.getParam();
+        String path = msg.getPath();
+        String responseMessage = "";
+        boolean result = false;
+        try {
+            switch (command) {
+                case "set_max_db_connections_count":
+                    result = this.setMaxDBConnections(param);
+                    responseMessage = "MAX DB CONNECTIONS SET";
+                    break;
+                case "set_max_thread_count":
+                    result = this.setMaxThreadsSize(Integer.parseInt(param));
+                    responseMessage = "MAX THREAD COUNT SET";
+                    break;
+                case "continue":
+                    result = this.resume();
+                    responseMessage = "SERVICE RESUMED";
+                    break;
+                case "freeze":
+                    result = this.freeze();
+
+                    responseMessage = "SERVICE FROZE";
+                    break;
+                case "add_command":
+                    result = this.add_command(param, path);
+                    responseMessage = "COMMAND ADDED";
+                    break;
+                case "delete_command":
+                    result = this.delete_command(param);
+                    responseMessage = "COMMAND DELETED";
+                    break;
+                case "set_error_reporting_level":
+                    result = this.set_log_level(param);
+                    responseMessage = "LOG LEVEL UPDATED";
+                    break;
+                case "update_command":
+                    result = this.update_command(param, path);
+                    responseMessage = "COMMAND UPDATED";
+                    break;
+                case "update_class":
+                    result = this.update_class(param, path);
+                    responseMessage = "Class UPDATED";
+                    break;
+
+                default: {
+                    responseMessage = "Unknown Command";
+
+                    break;
+                }
+            }
+            ctx.writeAndFlush(responseMessage);
+
+        }catch(Exception e){
+            e.printStackTrace();LOGGER.log(Level.SEVERE,e.getMessage(),e);
+            StringWriter errors = new StringWriter();
+            e.printStackTrace(new PrintWriter(errors));
+            ctx.writeAndFlush("ERROR");
+        }
+
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause){
+        cause.printStackTrace();
+        channelHandlerContext.close();
+    }
     
     private static HttpResponseStatus mapToStatus(String status){
         switch (status){
@@ -206,7 +293,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
                         LOGGER.log(Level.INFO,"Responding to corrID: "+ properties.getCorrelationId() +  ", on Queue : " + RESPONSE_QUEUE_NAME);
                         LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
                         LOGGER.log(Level.INFO,"Application    :   " + RPC_QUEUE_NAME);
-                        LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
+                        LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + service_port);
                         String responseMsg = new String(body, StandardCharsets.UTF_8);
                         org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
                         if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
@@ -294,7 +381,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
                             .build();
 //                    Controller.channel.writeAndFlush(new ErrorLog(LogLevel.INFO, "Responding to corrID: " + properties.getCorrelationId() + ", on Queue : " + RPC_QUEUE_NAME));
                     LOGGER.log(Level.INFO,"Responding to corrID: " + properties.getCorrelationId() + ", on Queue : " + REQUEST_QUEUE_NAME);
-                    LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
+                    LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + service_port);
                     try {
                         String message;
                         //Using Reflection to convert a command String to its appropriate class

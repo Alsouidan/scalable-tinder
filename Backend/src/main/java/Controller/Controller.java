@@ -45,8 +45,12 @@ public class Controller {
     Config conf = Config.getInstance();
     private String server = conf.getControllerHost();
     private int port = conf.getControllerPort();
-    private HashMap<String, HashMap<String,ServiceControl>>  availableServices = new HashMap<>();
+    private HashMap<String, HashMap<String,Integer>>  availableServices = new HashMap<>();
     private HashMap<String,Integer> instancesCounts = new HashMap<String, Integer>();
+    private int user_start_port = 9000;
+    private int moderator_start_port = 10000;
+    private int user_to_user_start_port = 11000;
+    private int chat_start_port = 12000;
     public static final Logger LOGGER = Logger.getLogger(Controller.class.getName()) ;
 
     //    public static void main(String[] args) {
@@ -94,12 +98,11 @@ public class Controller {
         ServiceControl service = null;
         switch (serviceName) {
             case user: {
-
                 
                 int newId = instancesCounts.get(conf.getServicesMqUserQueue()) + 1;
                 service = new UserService(newId);
                 instancesCounts.replace(conf.getServicesMqUserQueue(), newId);
-                availableServices.get(conf.getServicesMqUserQueue()).putIfAbsent(newId + "", service);
+                availableServices.get(conf.getServicesMqUserQueue()).putIfAbsent(newId + "", user_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
 
                 break;
@@ -110,7 +113,7 @@ public class Controller {
                 int newId = instancesCounts.get(conf.getServicesMqUserToUserQueue()) + 1;
                 service = new UserToUserService(newId);
                 instancesCounts.replace(conf.getServicesMqUserToUserQueue(), newId);
-                availableServices.get(conf.getServicesMqUserToUserQueue()).putIfAbsent(newId + "", service);
+                availableServices.get(conf.getServicesMqUserToUserQueue()).putIfAbsent(newId + "",user_to_user_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
                 break;
             }
@@ -120,7 +123,7 @@ public class Controller {
                 int newId = instancesCounts.get(conf.getServicesMqModeratorQueue()) + 1;
                 service = new ModeratorService(newId);
                 instancesCounts.replace(conf.getServicesMqModeratorQueue(), newId);
-                availableServices.get(conf.getServicesMqModeratorQueue()).putIfAbsent(newId + "", service);
+                availableServices.get(conf.getServicesMqModeratorQueue()).putIfAbsent(newId + "", moderator_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
                 break;
             }
@@ -129,7 +132,7 @@ public class Controller {
                 int newId = instancesCounts.get(conf.getServicesMqChatQueue()) + 1;
                 service = new ChatService(newId);
                 instancesCounts.replace(conf.getServicesMqChatQueue(), newId);
-                availableServices.get(conf.getServicesMqChatQueue()).putIfAbsent(newId + "", service);
+                availableServices.get(conf.getServicesMqChatQueue()).putIfAbsent(newId + "", chat_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
                 break;
             // TODO ADD SERVICE

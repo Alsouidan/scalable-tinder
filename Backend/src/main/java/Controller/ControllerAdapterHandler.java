@@ -3,10 +3,12 @@ package Controller;
 import Interface.ServiceControl;
 import Entities.ControlMessage;
 import Entities.ErrorLog;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -19,6 +21,7 @@ import org.json.JSONObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,10 +30,10 @@ import static io.netty.buffer.Unpooled.copiedBuffer;
 
 public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
 
-    private HashMap<String, HashMap<String,ServiceControl>> availableServices ;
+    private HashMap<String, HashMap<String,Integer>> availableServices ;
     private final Logger LOGGER = Logger.getLogger(ControllerAdapterHandler.class.getName()) ;
 
-    public ControllerAdapterHandler(HashMap<String, HashMap<String,ServiceControl>> availableServices) {
+    public ControllerAdapterHandler(HashMap<String, HashMap<String,Integer>> availableServices) {
         this.availableServices= availableServices;
     }
 
@@ -51,12 +54,12 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
             String path = (String) body.get("path");
             jsonRequest.put("application", service_s);
             jsonRequest.put("body", body);
-            ServiceControl service = availableServices.get(service_s).get(instance);
-            String responseMessage = controlService(channelHandlerContext,service,(String)(body.get("command")),param,path);
+            int port = availableServices.get(service_s).get(instance);
+            controlService(channelHandlerContext,port,(String)(body.get("command")),param,path);
 
 //            Controller.sendResponse(channelHandlerContext,responseMessage,false);
 
-        } catch (JSONException e) {
+        } catch (JSONException | InterruptedException e) {
             e.printStackTrace();LOGGER.log(Level.SEVERE,e.getMessage(),e);
             String responseMessage = "NO CORRECT JSON PROVIDED";
             Controller.sendResponse(channelHandlerContext,responseMessage,false);
@@ -64,65 +67,34 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
         
     }
 
-    private String controlService(ChannelHandlerContext ctx,ServiceControl service,String command,String param,String path){
-        String responseMessage = "";
-        boolean result = false;
-        try {
-            switch (command) {
-                case "set_max_db_connections_count":
-                    result = service.setMaxDBConnections(param);
-                    responseMessage = "MAX DB CONNECTIONS SET";
-                    break;
-                case "set_max_thread_count":
-                    result = service.setMaxThreadsSize(Integer.parseInt(param));
-                    responseMessage = "MAX THREAD COUNT SET";
-                    break;
-                case "continue":
-                    result = service.resume();
-                    responseMessage = "SERVICE RESUMED";
-                    break;
-                case "freeze":
-                    result = service.freeze();
+    private void controlService(ChannelHandlerContext ctx,int port,String command,String param,String path) throws InterruptedException {
+        EventLoopGroup group = new NioEventLoopGroup();
+        try{
+            Bootstrap clientBootstrap = new Bootstrap();
 
-                    responseMessage = "SERVICE FROZE";
-                    break;
-                case "add_command":
-                    result = service.add_command(param, path);
-                    responseMessage = "COMMAND ADDED";
-                    break;
-                case "delete_command":
-                    result = service.delete_command(param);
-                    responseMessage = "COMMAND DELETED";
-                    break;
-                case "set_error_reporting_level":
-                    result = service.set_log_level(param);
-                    responseMessage = "LOG LEVEL UPDATED";
-                    break;
-                case "update_command":
-                    result = service.update_command(param, path);
-                    responseMessage = "COMMAND UPDATED";
-                    break;
-                case "update_class":
-                    result = service.update_class(param, path);
-                    responseMessage = "Class UPDATED";
-                    break;
-
-                default: {
-                    responseMessage = "Unknown Command";
-
-                    break;
+            clientBootstrap.group(group);
+            clientBootstrap.channel(NioSocketChannel.class);
+            clientBootstrap.remoteAddress(new InetSocketAddress("localhost", port));
+            clientBootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                protected void initChannel(SocketChannel socketChannel) throws Exception {
+                    socketChannel.pipeline().addLast(new ChannelInboundHandlerAdapter(){
+                        @Override
+                        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                            Controller.sendResponse(ctx,(String)msg,false);
+                        }
+                    });
                 }
-            }
-            Controller.sendResponse(ctx,result?responseMessage:"ERROR",!result);
-
-        }catch(Exception e){
-            e.printStackTrace();LOGGER.log(Level.SEVERE,e.getMessage(),e);
-            StringWriter errors = new StringWriter();
-            e.printStackTrace(new PrintWriter(errors));
-            Controller.sendResponse(ctx,"ERROR",true);
+            });
+            ChannelFuture channelFuture = clientBootstrap.connect().sync();
+            channelFuture.channel().writeAndFlush(new ControlMessage(command,param,path));
+            channelFuture.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            group.shutdownGracefully().sync();
         }
 
-        return responseMessage +" Instance ID: "+service.ID;
+
     }
 
     @Override
