@@ -100,7 +100,7 @@ public class Controller {
             case user: {
                 
                 int newId = instancesCounts.get(conf.getServicesMqUserQueue()) + 1;
-                service = new UserService(newId);
+                service = new UserService(newId+user_start_port);
                 instancesCounts.replace(conf.getServicesMqUserQueue(), newId);
                 availableServices.get(conf.getServicesMqUserQueue()).putIfAbsent(newId + "", user_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
@@ -111,7 +111,7 @@ public class Controller {
 
 //                this.serviceName = conf.getServicesMqUserToUserQueue();
                 int newId = instancesCounts.get(conf.getServicesMqUserToUserQueue()) + 1;
-                service = new UserToUserService(newId);
+                service = new UserToUserService(newId+user_to_user_start_port);
                 instancesCounts.replace(conf.getServicesMqUserToUserQueue(), newId);
                 availableServices.get(conf.getServicesMqUserToUserQueue()).putIfAbsent(newId + "",user_to_user_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
@@ -121,7 +121,7 @@ public class Controller {
 
 //                this.serviceName = conf.getServicesMqModeratorQueue();
                 int newId = instancesCounts.get(conf.getServicesMqModeratorQueue()) + 1;
-                service = new ModeratorService(newId);
+                service = new ModeratorService(newId+moderator_start_port);
                 instancesCounts.replace(conf.getServicesMqModeratorQueue(), newId);
                 availableServices.get(conf.getServicesMqModeratorQueue()).putIfAbsent(newId + "", moderator_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
@@ -130,7 +130,7 @@ public class Controller {
             case chat:
 //                this.serviceName = conf.getServicesMqChatQueue();
                 int newId = instancesCounts.get(conf.getServicesMqChatQueue()) + 1;
-                service = new ChatService(newId);
+                service = new ChatService(newId+chat_start_port);
                 instancesCounts.replace(conf.getServicesMqChatQueue(), newId);
                 availableServices.get(conf.getServicesMqChatQueue()).putIfAbsent(newId + "", chat_start_port+newId);
                 System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");

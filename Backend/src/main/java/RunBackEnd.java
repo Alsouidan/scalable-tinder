@@ -65,6 +65,14 @@ public class RunBackEnd {
                             ServiceControllerSocket socket = new ServiceControllerSocket(s.getService_port(),s);
                             new Thread(() -> {
                                 s.start();
+                               
+                            }).start();
+                            try {
+                                Thread.sleep(200);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();s.LOGGER.log(Level.SEVERE,e.getMessage(),e);
+                            }
+                            new Thread(() -> {
                                 try {
                                     socket.start();
                                 } catch (InterruptedException e) {

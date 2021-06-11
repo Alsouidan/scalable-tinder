@@ -13,6 +13,8 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
@@ -55,11 +57,23 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
             jsonRequest.put("application", service_s);
             jsonRequest.put("body", body);
             int port = availableServices.get(service_s).get(instance);
-            controlService(channelHandlerContext,port,(String)(body.get("command")),param,path);
+            new Thread(() -> {
+                try {
+                    controlService(channelHandlerContext,port,(String)(body.get("command")),param,path);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }).start();
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
 //            Controller.sendResponse(channelHandlerContext,responseMessage,false);
 
-        } catch (JSONException | InterruptedException e) {
+        } catch (JSONException e) {
             e.printStackTrace();LOGGER.log(Level.SEVERE,e.getMessage(),e);
             String responseMessage = "NO CORRECT JSON PROVIDED";
             Controller.sendResponse(channelHandlerContext,responseMessage,false);
@@ -74,10 +88,11 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
 
             clientBootstrap.group(group);
             clientBootstrap.channel(NioSocketChannel.class);
+            System.out.println("PORT TO SEND TO:"+port);
             clientBootstrap.remoteAddress(new InetSocketAddress("localhost", port));
             clientBootstrap.handler(new ChannelInitializer<SocketChannel>() {
                 protected void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast(new ChannelInboundHandlerAdapter(){
+                    socketChannel.pipeline().addLast(new StringDecoder(),new StringEncoder(),new ChannelInboundHandlerAdapter(){
                         @Override
                         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                             Controller.sendResponse(ctx,(String)msg,false);
@@ -85,8 +100,11 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
                     });
                 }
             });
-            ChannelFuture channelFuture = clientBootstrap.connect().sync();
-            channelFuture.channel().writeAndFlush(new ControlMessage(command,param,path));
+            ChannelFuture channelFuture = clientBootstrap.connect("localhost",port).sync();
+            Channel c = channelFuture.channel();
+            System.out.println("CONNECTED TO SERVICE");
+            c.writeAndFlush(new ControlMessage(command,param,path));
+            System.out.print(c.isActive());
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();

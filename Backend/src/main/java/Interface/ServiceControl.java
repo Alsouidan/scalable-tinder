@@ -18,11 +18,9 @@ import MediaServer.MediaHandler;
 import MediaServer.MinioInstance;
 import NettyWebServer.NettyServerInitializer;
 import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.DefaultFileRegion;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.util.CharsetUtil;
@@ -53,7 +51,7 @@ import static io.netty.buffer.Unpooled.copiedBuffer;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-public abstract class ServiceControl extends SimpleChannelInboundHandler {    // This class is responsible for Managing Each Service (Application) Fully (Queue (Reuqest/Response), Controller etc.)
+public abstract class ServiceControl extends ChannelInboundHandlerAdapter {    // This class is responsible for Managing Each Service (Application) Fully (Queue (Reuqest/Response), Controller etc.)
 
     public int service_port;
     protected Config conf = Config.getInstance();
@@ -122,12 +120,14 @@ public abstract class ServiceControl extends SimpleChannelInboundHandler {    //
         consumeFromResponseQueue();
     }
     @Override
-    public void channelActive(ChannelHandlerContext channelHandlerContext){
-        channelHandlerContext.writeAndFlush(Unpooled.copiedBuffer("Netty Rocks!", CharsetUtil.UTF_8));
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
     }
 
+
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, Object in) {
+    public void channelRead (ChannelHandlerContext ctx, Object in) {
+        System.out.println("IN CHANNEL READ");
         ControlMessage msg = (ControlMessage)in;
         String command = msg.getControlCommand();
         String param = msg.getParam();
@@ -180,6 +180,8 @@ public abstract class ServiceControl extends SimpleChannelInboundHandler {    //
                     break;
                 }
             }
+            System.out.println(responseMessage);
+            LOGGER.log(Level.INFO,responseMessage);
             ctx.writeAndFlush(responseMessage);
 
         }catch(Exception e){
