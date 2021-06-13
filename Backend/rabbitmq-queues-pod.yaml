@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: rabbitmq-queues
+  name: rabbitmq-queues
+spec:
+  containers:
+    - env:
+        - name: HOSTNAMERABBIT
+          value: rabbitmq_server
+      image: scalable2021/rabbitmq_queues
+      name: rabbitmq-queues
+      resources: {}
+  restartPolicy: OnFailure
+status: {}

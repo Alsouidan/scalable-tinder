@@ -1,12 +1,14 @@
-version: "3.9"
+version: "3"
 services:
 
   server:
+    image: scalable2021/backend_server
     build:
       context: .
-      dockerfile: ./DockerFile_Builders/Server/Dockerfile
+      dockerfile: "./DockerFile_Builders/Server/Dockerfile"
     ports:
       - "8021:8080"
+
 
   rabbitmq_server: # login guest:guest
     image: rabbitmq:3-management
@@ -23,6 +25,7 @@ services:
       timeout: 10s
       retries: 5
   rabbitmq_queues:
+    image: scalable2021/rabbitmq_queues
     depends_on:
       - "rabbitmq_server"
     links:
@@ -33,37 +36,43 @@ services:
     
     build:
       context: .
-      dockerfile: DockerFile_Builders/RabbitMQ/Dockerfile
+      dockerfile: "DockerFile_Builders/RabbitMQ/Dockerfile"
 
   user_service:
+    image: scalable2021/backend_user_service
     depends_on:
       - "rabbitmq_queues"
     links:
       - "rabbitmq_queues"
     build:
       context: .
-      dockerfile: DockerFile_Builders/Services/User/Dockerfile
-#  moderator_service:
-#    depends_on:
-#      - "rabbitmq_queues"
-#    links:
-#      - "rabbitmq_queues"
-#    build:
-#      context: .
-#      dockerfile: DockerFile_Builders/Services/Moderator/Dockerfile
-#  user_to_user_service:
-#    depends_on:
-#      - "rabbitmq_queues"
-#    links:
-#      - "rabbitmq_queues"
-#    build:
-#      context: .
-#      dockerfile: DockerFile_Builders/Services/UserToUser/Dockerfile
-#  chat_service:
-#    depends_on:
-#      - "rabbitmq_queues"
-#    links:
-#      - "rabbitmq_queues"
-#    build:
-#      context: .
-#      dockerfile: DockerFile_Builders/Services/Chat/Dockerfile
+      dockerfile: "DockerFile_Builders/Services/User/Dockerfile"
+#
+  moderator_service:
+    image: scalable2021/backend_moderator_service
+    depends_on:
+      - "rabbitmq_queues"
+    links:
+      - "rabbitmq_queues"
+    build:
+      context: .
+      dockerfile: "DockerFile_Builders/Services/Moderator/Dockerfile"
+  user_to_user_service:
+    image: scalable2021/backend_user_to_user_service
+    depends_on:
+      - "rabbitmq_queues"
+    links:
+      - "rabbitmq_queues"
+    build:
+      context: .
+      dockerfile: "DockerFile_Builders/Services/UserToUser/Dockerfile"
+  chat_service:
+    image: scalable2021/backend_chat_service
+    depends_on:
+      - "rabbitmq_queues"
+    links:
+      - "rabbitmq_queues"
+    build:
+      context: .
+      dockerfile: "DockerFile_Builders/Services/Chat/Dockerfile"
+
