@@ -1,5 +1,14 @@
 version: "3"
 services:
+    redis0:
+      image: scalable2021/redis0
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7000
+          PORT_BUS_CONFIG: 8100
+      network_mode: "host"
 
   server:
     image: scalable2021/backend_server
@@ -32,7 +41,6 @@ services:
       - "rabbitmq_server"
     environment:
       - HOSTNAMERABBIT=rabbitmq_server
-    restart: on-failure
     
     build:
       context: .
@@ -75,4 +83,71 @@ services:
     build:
       context: .
       dockerfile: "DockerFile_Builders/Services/Chat/Dockerfile"
+
+
+    redis1:
+      image: scalable2021/redis1
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7001
+          PORT_BUS_CONFIG: 8101
+      network_mode: "host"
+
+    redis2:
+      image: scalable2021/redis2
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7002
+          PORT_BUS_CONFIG: 8102
+      network_mode: "host"
+
+    redis3:
+      image: scalable2021/redis3
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7003
+          PORT_BUS_CONFIG: 8103
+      network_mode: "host"
+
+    redis4:
+      image: scalable2021/redis4
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7004
+          PORT_BUS_CONFIG: 8104
+      network_mode: "host"
+
+    redis5:
+      image: scalable2021/redis5
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile-base
+        args:
+          PORT_CONFIG: 7005
+          PORT_BUS_CONFIG: 8105
+      network_mode: "host"
+
+
+    redis-cluster:
+      tty: true
+      image: scalable2021/redis_cluster
+      build:
+        context: .
+        dockerfile: ./DockerFile_Builders/Redis/Dockerfile
+      #hostname: redis-server
+      depends_on:
+        - redis1
+        - redis2
+        - redis3
+        - redis4
+        - redis5
+      network_mode: "host"
 

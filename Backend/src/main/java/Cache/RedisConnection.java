@@ -1,17 +1,11 @@
 package Cache;
 
 import Config.Config;
-
-import Interface.ConcreteCommand;
-import com.lambdaworks.redis.*;
-import com.lambdaworks.redis.api.StatefulRedisConnection;
-import com.lambdaworks.redis.api.sync.RedisCommands;
+import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.cluster.api.sync.RedisAdvancedClusterCommands;
-import org.json.JSONArray;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -36,7 +30,7 @@ public class RedisConnection {
          LOGGER.log(Level.INFO, connection.getPartitions().toString());
          redis = this;
      }
-
+         
      private List<RedisURI> getNodesURI(){
       List<RedisURI> URIs = new ArrayList<RedisURI>();
       for(int i=0;i<totalMasterNodes;i++){
@@ -67,6 +61,7 @@ public class RedisConnection {
              Date oldDate = new Date();
              Date newDate = new Date(oldDate.getTime() + TimeUnit.HOURS.toMillis(expiryDuration));
              redisCommands.expireat(key, newDate);
+
              return value;
          }catch(Exception e){
              return null;

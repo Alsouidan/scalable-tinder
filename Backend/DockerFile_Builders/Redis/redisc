@@ -1,0 +1,15 @@
+port 7000
+# Ip from host interface vEthernet (DockerNAT) IP + 1
+# On my computer this is 10.0.75.1 so i will put 10.0.75.2
+bind 172.17.0.1
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+protected-mode no
+appendonly yes
+
+# Ip from host interface vEthernet (DockerNAT) IP + 1
+# On my computer this is 10.0.75.1 so i will put 10.0.75.2
+cluster-announce-ip 172.17.0.1
+cluster-announce-port 7000
+#cluster-announce-bus-port 8000

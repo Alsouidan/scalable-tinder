@@ -85,11 +85,11 @@ public abstract class ServiceControl {    // This class is responsible for Manag
     public ServiceControl(int ID) {
         this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsNo);
         init();
-//        initDB();
+        //initDB();
         REQUEST_QUEUE_NAME = RPC_QUEUE_NAME + REQUEST_EXTENSION;
         RESPONSE_QUEUE_NAME = RPC_QUEUE_NAME + RESPONSE_EXTENSION;
         this.ID = ID;
-//        redis = new RedisConnection();
+        redis = new RedisConnection();
     }
 
     public MinioInstance getMinioInstance() {
