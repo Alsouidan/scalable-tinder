@@ -46,6 +46,7 @@ public class Config {
     private final String arangoPass="";
     private String root_path = "";
 
+
     public Properties getArangoConfig() {
         return arangoConfig;
     }
