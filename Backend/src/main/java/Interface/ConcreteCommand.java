@@ -8,12 +8,14 @@ import Database.PostgreSQL;
 import Entities.HttpResponseTypes;
 import Entities.MediaServerRequest;
 import Entities.MediaServerResponse;
+import Entities.ServerRequest;
 import MediaServer.MinioInstance;
 import Models.Message;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -70,6 +72,7 @@ public abstract class ConcreteCommand extends Command {
             PostgresInstance = (PostgreSQL) parameters.get("PostgresInstance");
             MinioInstance=(MinioInstance) parameters.get("MinioInstance");
             redis = (RedisConnection) parameters.get("redis");
+            ChannelHandlerContext ctx = (ChannelHandlerContext) parameters.get("ctx");
             ArangoInstance.setRedisConnection(redis);
             LOGGER.log(Level.INFO,"ARANGO is "+ArangoInstance);
 //            UserCacheController = (UserCacheController)
@@ -102,7 +105,7 @@ public abstract class ConcreteCommand extends Command {
                 channel.basicPublish("", replyProps.getReplyTo(), replyProps, msr.getByteArray());
             }
             else
-                channel.basicPublish("", replyProps.getReplyTo(), replyProps, jsonBodyObject.toString().getBytes("UTF-8"));;
+                channel.basicPublish("", replyProps.getReplyTo(), replyProps, new ServerRequest(ctx,jsonBodyObject.toString()).getByteArray());;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE,e.getMessage(),e);
 //            StringWriter errors = new StringWriter();

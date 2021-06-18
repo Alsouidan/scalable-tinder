@@ -1,0 +1,928 @@
+apiVersion: v1
+items:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: arangodb-db-container
+      name: arangodb-db-container
+    spec:
+      ports:
+        - name: "8529"
+          port: 8529
+          targetPort: 8529
+      selector:
+        io.kompose.service: arangodb-db-container
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio1
+      name: minio1
+    spec:
+      ports:
+        - name: "9000"
+          port: 9000
+          targetPort: 9000
+      selector:
+        io.kompose.service: minio1
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio2
+      name: minio2
+    spec:
+      ports:
+        - name: "9000"
+          port: 9000
+          targetPort: 9000
+      selector:
+        io.kompose.service: minio2
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio3
+      name: minio3
+    spec:
+      ports:
+        - name: "9000"
+          port: 9000
+          targetPort: 9000
+      selector:
+        io.kompose.service: minio3
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio4
+      name: minio4
+    spec:
+      ports:
+        - name: "9000"
+          port: 9000
+          targetPort: 9000
+      selector:
+        io.kompose.service: minio4
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: nginx
+      name: nginx
+    spec:
+      ports:
+        - name: "9000"
+          port: 9000
+          targetPort: 9000
+      selector:
+        io.kompose.service: nginx
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: rabbitmq-server
+      name: rabbitmq-server
+    spec:
+      ports:
+        - name: "4369"
+          port: 4369
+          targetPort: 4369
+        - name: "5671"
+          port: 5671
+          targetPort: 5671
+        - name: "5672"
+          port: 5672
+          targetPort: 5672
+        - name: "25672"
+          port: 25672
+          targetPort: 25672
+        - name: "15671"
+          port: 15671
+          targetPort: 15671
+        - name: "15672"
+          port: 15672
+          targetPort: 15672
+      selector:
+        io.kompose.service: rabbitmq-server
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: server
+      name: server
+    spec:
+      ports:
+        - name: "8021"
+          port: 8021
+          targetPort: 8080
+      selector:
+        io.kompose.service: server
+    status:
+      loadBalancer: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: arangodb-db-container
+      name: arangodb-db-container
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: arangodb-db-container
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: arangodb-db-container
+        spec:
+          containers:
+            - args:
+                - arangod
+              env:
+                - name: ARANGODB_COL1
+                  value: userData
+                - name: ARANGODB_COL2
+                  value: chats
+                - name: ARANGODB_COL3
+                  value: profileViews
+                - name: ARANGODB_COL4
+                  value: notifications
+                - name: ARANGODB_PASSWORD
+                  value: 
+                - name: ARANGODB_USERNAME
+                  value: root
+                - name: ARANGO_DB
+                  value: tinderDB
+                - name: ARANGO_ROOT_PASSWORD
+                  value: rootpassword
+              image: scalable2021/arangodb
+              name: arangodb-db-container
+              ports:
+                - containerPort: 8529
+              resources: {}
+              volumeMounts:
+                - mountPath: /var/lib/arangodb3
+                  name: arangodb-data-container
+                - mountPath: /var/lib/arangodb3-apps
+                  name: arangodb-apps-data-container
+          restartPolicy: Always
+          volumes:
+            - name: arangodb-data-container
+              persistentVolumeClaim:
+                claimName: arangodb-data-container
+            - name: arangodb-apps-data-container
+              persistentVolumeClaim:
+                claimName: arangodb-apps-data-container
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: arangodb-data-container
+      name: arangodb-data-container
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: arangodb-apps-data-container
+      name: arangodb-apps-data-container
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: chat-service
+      name: chat-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: chat-service
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: chat-service
+        spec:
+          containers:
+            - image: scalable2021/backend_chat_service
+              name: chat-service
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio1
+      name: minio1
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: minio1
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: minio1
+        spec:
+          containers:
+            - args:
+                - server
+                - http://minio{1...4}/data{1...2}
+              env:
+                - name: MINIO_ROOT_PASSWORD
+                  value: minioadmin
+                - name: MINIO_ROOT_USER
+                  value: minioadmin
+              image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+              livenessProbe:
+                exec:
+                  command:
+                    - curl
+                    - -f
+                    - http://localhost:9000/minio/health/live
+                failureThreshold: 3
+                periodSeconds: 30
+                timeoutSeconds: 20
+              name: minio1
+              ports:
+                - containerPort: 9000
+              resources: {}
+              volumeMounts:
+                - mountPath: /data1
+                  name: data1-1
+                - mountPath: /data2
+                  name: data1-2
+          hostname: minio1
+          restartPolicy: Always
+          volumes:
+            - name: data1-1
+              persistentVolumeClaim:
+                claimName: data1-1
+            - name: data1-2
+              persistentVolumeClaim:
+                claimName: data1-2
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data1-1
+      name: data1-1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data1-2
+      name: data1-2
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio2
+      name: minio2
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: minio2
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: minio2
+        spec:
+          containers:
+            - args:
+                - server
+                - http://minio{1...4}/data{1...2}
+              env:
+                - name: MINIO_ROOT_PASSWORD
+                  value: minioadmin
+                - name: MINIO_ROOT_USER
+                  value: minioadmin
+              image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+              livenessProbe:
+                exec:
+                  command:
+                    - curl
+                    - -f
+                    - http://localhost:9000/minio/health/live
+                failureThreshold: 3
+                periodSeconds: 30
+                timeoutSeconds: 20
+              name: minio2
+              ports:
+                - containerPort: 9000
+              resources: {}
+              volumeMounts:
+                - mountPath: /data1
+                  name: data2-1
+                - mountPath: /data2
+                  name: data2-2
+          hostname: minio2
+          restartPolicy: Always
+          volumes:
+            - name: data2-1
+              persistentVolumeClaim:
+                claimName: data2-1
+            - name: data2-2
+              persistentVolumeClaim:
+                claimName: data2-2
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data2-1
+      name: data2-1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data2-2
+      name: data2-2
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio3
+      name: minio3
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: minio3
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: minio3
+        spec:
+          containers:
+            - args:
+                - server
+                - http://minio{1...4}/data{1...2}
+              env:
+                - name: MINIO_ROOT_PASSWORD
+                  value: minioadmin
+                - name: MINIO_ROOT_USER
+                  value: minioadmin
+              image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+              livenessProbe:
+                exec:
+                  command:
+                    - curl
+                    - -f
+                    - http://localhost:9000/minio/health/live
+                failureThreshold: 3
+                periodSeconds: 30
+                timeoutSeconds: 20
+              name: minio3
+              ports:
+                - containerPort: 9000
+              resources: {}
+              volumeMounts:
+                - mountPath: /data1
+                  name: data3-1
+                - mountPath: /data2
+                  name: data3-2
+          hostname: minio3
+          restartPolicy: Always
+          volumes:
+            - name: data3-1
+              persistentVolumeClaim:
+                claimName: data3-1
+            - name: data3-2
+              persistentVolumeClaim:
+                claimName: data3-2
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data3-1
+      name: data3-1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data3-2
+      name: data3-2
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio4
+      name: minio4
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: minio4
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: minio4
+        spec:
+          containers:
+            - args:
+                - server
+                - http://minio{1...4}/data{1...2}
+              env:
+                - name: MINIO_ROOT_PASSWORD
+                  value: minioadmin
+                - name: MINIO_ROOT_USER
+                  value: minioadmin
+              image: minio/minio:RELEASE.2021-06-09T18-51-39Z
+              livenessProbe:
+                exec:
+                  command:
+                    - curl
+                    - -f
+                    - http://localhost:9000/minio/health/live
+                failureThreshold: 3
+                periodSeconds: 30
+                timeoutSeconds: 20
+              name: minio4
+              ports:
+                - containerPort: 9000
+              resources: {}
+              volumeMounts:
+                - mountPath: /data1
+                  name: data4-1
+                - mountPath: /data2
+                  name: data4-2
+          hostname: minio4
+          restartPolicy: Always
+          volumes:
+            - name: data4-1
+              persistentVolumeClaim:
+                claimName: data4-1
+            - name: data4-2
+              persistentVolumeClaim:
+                claimName: data4-2
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data4-1
+      name: data4-1
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: data4-2
+      name: data4-2
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: moderator-service
+      name: moderator-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: moderator-service
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: moderator-service
+        spec:
+          containers:
+            - image: scalable2021/backend_moderator_service
+              name: moderator-service
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: nginx
+      name: nginx
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: nginx
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: nginx
+        spec:
+          containers:
+            - image: scalable2021/nginx
+              name: nginx
+              ports:
+                - containerPort: 9000
+              resources: {}
+          hostname: nginx
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: postgres-db-container
+      name: postgres-db-container
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: postgres-db-container
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: postgres-db-container
+        spec:
+          containers:
+            - image: scalable2021/postgres
+              name: postgres-db-container
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: rabbitmq-queues
+      name: rabbitmq-queues
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: rabbitmq-queues
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: rabbitmq-queues
+        spec:
+          containers:
+            - env:
+                - name: HOSTNAMERABBIT
+                  value: rabbitmq_server
+              image: scalable2021/rabbitmq_queues
+              name: rabbitmq-queues
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: rabbitmq-server
+      name: rabbitmq-server
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: rabbitmq-server
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: rabbitmq-server
+        spec:
+          containers:
+            - image: rabbitmq:3-management
+              
+              name: rabbitmq-server
+              ports:
+                - containerPort: 4369
+                - containerPort: 5671
+                - containerPort: 5672
+                - containerPort: 25672
+                - containerPort: 15671
+                - containerPort: 15672
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: server
+      name: server
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: server
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: server
+        spec:
+          containers:
+            - image: scalable2021/backend_server
+              name: server
+              ports:
+                - containerPort: 8080
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: user-service
+      name: user-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: user-service
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: user-service
+        spec:
+          containers:
+            - image: scalable2021/backend_user_service
+              name: user-service
+              resources: {}
+          restartPolicy: Always
+    status: {}
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert --out ./kubernetes_deployment
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: user-to-user-service
+      name: user-to-user-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          io.kompose.service: user-to-user-service
+      strategy: {}
+      template:
+        metadata:
+          annotations:
+            kompose.cmd: kompose convert --out ./kubernetes_deployment
+            kompose.version: 1.22.0 (955b78124)
+          creationTimestamp: null
+          labels:
+            io.kompose.service: user-to-user-service
+        spec:
+          containers:
+            - image: scalable2021/backend_user_to_user_service
+              name: user-to-user-service
+              resources: {}
+          restartPolicy: Always
+    status: {}
+kind: List
+metadata: {}
+

@@ -19,6 +19,7 @@ SET row_security = off;
 --
 -- Name: banData; Type: TYPE; Schema: public; Owner: postgres
 --
+SELECT current_database();
 
 CREATE TYPE public."banData" AS (
 	id integer,
@@ -1317,10 +1318,10 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 -- Data for Name: bans; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.bans (id, moderator_id, user_id, reason, created_at, expiry_date) FROM stdin;
-1	1	17	racist bio	2021-04-25 14:03:53.254663	2021-09-09
-\.
-
+--COPY public.bans (id, moderator_id, user_id, reason, created_at, expiry_date) FROM stdin;
+--1	1	17	racist bio	2021-04-25 14:03:53.254663	2021-09-09
+--\.
+--
 
 --
 -- Data for Name: blocks; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -1383,10 +1384,10 @@ COPY public.interests (id, name) FROM stdin;
 -- Data for Name: moderators; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.moderators (id, email, password) FROM stdin;
-1	hussein.badr@gmail.com	123456789
-2	youssef.sameh@gmail.com	123456789
-\.
+--COPY public.moderators (id, email, password) FROM stdin;
+--1	hussein.badr@gmail.com	123456789
+--2	youssef.sameh@gmail.com	123456789
+--\.
 
 
 --
@@ -1442,7 +1443,7 @@ COPY public.users (id, email, password, is_banned, is_premium, credit_card_token
 -- Name: bans_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bans_id_seq', 1, true);
+--SELECT pg_catalog.setval('public.bans_id_seq', 1, true);
 
 
 --
@@ -1463,7 +1464,7 @@ SELECT pg_catalog.setval('public.interests_id_seq', 16, true);
 -- Name: moderators_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.moderators_id_seq', 2, true);
+--SELECT pg_catalog.setval('public.moderators_id_seq', 2, true);
 
 
 --

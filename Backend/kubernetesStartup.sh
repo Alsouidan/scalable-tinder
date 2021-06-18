@@ -1,3 +1,7 @@
+sudo systemctl start docker
+docker login
+docker-compose build
+docker-compose push
 minikube start
-kompose convert
-kubectl apply -f user-to-user-service-deployment.yaml,server-deployment.yaml,rabbitmq-server-deployment.yaml,rabbitmq-queues-pod.yaml,moderator-service-deployment.yaml,chat-service-deployment.yaml,server-service.yaml,rabbitmq-server-service.yaml
+kompose convert --out ./kubernetes_deployment
+kubectl apply -f ./kubernetes_deployment

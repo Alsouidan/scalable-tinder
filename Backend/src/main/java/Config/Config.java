@@ -338,6 +338,7 @@ public class Config {
     public String getMinioSecretKey(){return minioConfig.getProperty("minio_secret_key");}
     public String getMinioBucketName(){return minioConfig.getProperty("minio_bucket_name");}
     public String getMinioPort(){return minioConfig.getProperty("minio_port");}
+    public String getMinioHost(){return minioConfig.getProperty("minio_host");}
     //Postgresql Configs
 
     public String getPostgresqlUserName() {return postgresqlConfig.getProperty("postgresql_username");}

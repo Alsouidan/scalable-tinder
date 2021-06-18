@@ -34,9 +34,10 @@ public class RedisConnection {
      private List<RedisURI> getNodesURI(){
       List<RedisURI> URIs = new ArrayList<RedisURI>();
       for(int i=0;i<totalMasterNodes;i++){
-          int port = Integer.parseInt(config.getProperty("masterPort"+(i+1)));
-          RedisURI masterURI = RedisURI.create(String.format("redis://%s:%s", host, port));
-          RedisURI slaveURI = RedisURI.create(String.format("redis://%s:%s", host, port+2));
+          String path = config.getProperty("masterPath"+(i+1));
+          String slave_path = config.getProperty("slavePath"+(i+1));
+          RedisURI masterURI = RedisURI.create(String.format("redis://"+path));
+          RedisURI slaveURI = RedisURI.create(String.format("redis://"+slave_path));
           URIs.add(masterURI);
           URIs.add(slaveURI);
       }

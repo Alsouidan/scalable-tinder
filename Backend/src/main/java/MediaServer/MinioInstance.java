@@ -16,6 +16,7 @@ public class MinioInstance {
     private String minioSecretKey = conf.getMinioSecretKey();
     private String minioAccessKey=conf.getMinioAccessKey();
     private String minioPort=conf.getMinioPort();
+    private String minioHost=conf.getMinioHost();
     private String minioBucketName=conf.getMinioBucketName();
     private MinioClient minioClient;
 
@@ -25,7 +26,7 @@ public class MinioInstance {
                 // Create a minioClient with the MinIO server playground, its access key and secret key.
                  minioClient =
                         MinioClient.builder()
-                                .endpoint("http://localhost:"+minioPort)
+                                .endpoint("http://"+minioHost+":"+minioPort)
                                 .credentials(minioAccessKey,minioSecretKey )
                                 .build();
 

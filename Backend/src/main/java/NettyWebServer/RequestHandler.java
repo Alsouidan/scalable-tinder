@@ -2,19 +2,20 @@ package NettyWebServer;
 
 import Config.Config;
 import Entities.MediaServerRequest;
+import Entities.MediaServerResponse;
+import MediaServer.MediaHandler;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.AttributeKey;
@@ -23,8 +24,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -32,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class RequestHandler extends ChannelInboundHandlerAdapter {
 
@@ -44,6 +48,10 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
     private int serverPort = config.getServerQueuePort();
     private String serverUser = config.getServerQueueUserName();
     private String serverPass = config.getServerQueuePass();
+    private Channel responseQueueChannel;
+    private String responseConsumerTag;
+    private Consumer responseConsumer;
+    private String RESPONSE_QUEUE_NAME = "SERVER-RESPONSE";
     private final Logger LOGGER = Logger.getLogger(RequestHandler.class.getName()) ;
     private boolean isTesting = false;
 
@@ -61,7 +69,102 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
         this.RPC_QUEUE_SEND_TO = RPC_QUEUE_SEND_TO;
         this.isTesting = isTesting;
     }
+    private static HttpResponseStatus mapToStatus(String status){
+        switch (status){
+            case "_200":return HttpResponseStatus.OK;
+            case "_404":return HttpResponseStatus.NOT_FOUND;
+            case "_400":return HttpResponseStatus.BAD_REQUEST;
+            case "_401":return HttpResponseStatus.UNAUTHORIZED;
+            case "_500":return HttpResponseStatus.BAD_REQUEST;
+            default:return HttpResponseStatus.ACCEPTED;
+        }
+    }
+    private void consumeFromResponseQueue() {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(serverHost);
+        factory.setPort(serverPort);
+        factory.setUsername(serverUser);
+        factory.setPassword(serverPass);
+        Connection connection = null;
 
+        try {
+            connection = factory.newConnection();
+            responseQueueChannel = connection.createChannel();
+            responseQueueChannel.queueDeclare(RESPONSE_QUEUE_NAME, true, false, false, null);
+            responseQueueChannel.basicQos(3);
+            LOGGER.log(Level.INFO," [x] Awaiting RPC RESPONSES on Queue : " + RESPONSE_QUEUE_NAME);
+            responseConsumer = new DefaultConsumer(responseQueueChannel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+                    try {
+                        //Using Reflection to convert a command String to its appropriate class
+//                        Channel receiver = REQUEST_CHANNEL_MAP.get(RESPONSE_MAIN_QUEUE_NAME);
+
+                        // If a normal command's response
+                        LOGGER.log(Level.INFO, "Responding to corrID: " + properties.getCorrelationId() + ", on Queue : " + RESPONSE_QUEUE_NAME);
+
+
+                        String responseMsg = new String(body, StandardCharsets.UTF_8);
+                        org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
+                        String uuid = responseJson.getString("uuid");
+                        if (responseJson.getString("command").equals("UpdateChat") || responseJson.getString("command").equals("UploadMedia"))
+                            return;
+                        String status = responseJson.get("status").toString();
+                        FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1,
+                                mapToStatus(status),
+                                copiedBuffer(responseJson.get("response").toString().getBytes()));
+                        org.json.JSONObject headers = (org.json.JSONObject) responseJson.get("Headers");
+                        Iterator<String> keys = headers.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            if (key.toLowerCase().contains("content")) {
+                                continue;
+                            }
+                            String value = (String) headers.get(key);
+                            response.headers().set(key, value);
+                        }
+                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+                        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+                        //System.out.println(NettyServerInitializer.getUuid().remove(properties.getCorrelationId()));
+                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
+                        ctxRec.writeAndFlush(response);
+                        ctxRec.close();
+                    }
+
+                } catch(RuntimeException|
+                IOException e)
+
+                {
+                    FullHttpResponse response = new DefaultFullHttpResponse(
+                            HttpVersion.HTTP_1_1,
+                            HttpResponseStatus.BAD_REQUEST,
+                            copiedBuffer("ERROR".toString().getBytes()));
+
+                    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+                    response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+
+                    ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
+                    ctxRec.writeAndFlush(response);
+                    ctxRec.close();
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    consumeFromResponseQueue();
+                } finally
+
+                {
+                    synchronized (this) {
+                        this.notify();
+                    }
+                }
+            };
+            responseConsumerTag = responseQueueChannel.basicConsume(RESPONSE_QUEUE_NAME, true, responseConsumer);
+            // Wait and be prepared to consume the message from RPC client.
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,e.getMessage(),e);
+//            consumeFromQueue(RPC_QUEUE_NAME,QUEUE_TO);
+        }
+    }
 
 
     @Override

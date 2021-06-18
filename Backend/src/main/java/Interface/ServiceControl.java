@@ -13,15 +13,20 @@ import Database.PostgreSQL;
 import Entities.ErrorLog;
 import Entities.MediaServerRequest;
 import Entities.MediaServerResponse;
+import Entities.ServerRequest;
 import MediaServer.MediaHandler;
 import MediaServer.MinioInstance;
 import NettyWebServer.NettyServerInitializer;
 import com.rabbitmq.client.*;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.DefaultFileRegion;
+import com.rabbitmq.client.Channel;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.EventExecutor;
+import org.eclipse.jetty.server.Server;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -30,6 +35,7 @@ import javax.activation.MimetypesFileTypeMap;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.*;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
@@ -85,7 +91,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
     public ServiceControl(int ID) {
         this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsNo);
         init();
-        //initDB();
+        initDB();
         REQUEST_QUEUE_NAME = RPC_QUEUE_NAME + REQUEST_EXTENSION;
         RESPONSE_QUEUE_NAME = RPC_QUEUE_NAME + RESPONSE_EXTENSION;
         this.ID = ID;
@@ -143,6 +149,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 //                        Channel receiver = REQUEST_CHANNEL_MAP.get(RESPONSE_MAIN_QUEUE_NAME);
 
                          MediaServerResponse msr=MediaServerResponse.getObject(body);
+                        
                          if(msr!=null){   // If a download command
                            body=msr.getResponseJson().toString().getBytes("UTF-8");
                              String responseMsg = new String(body, StandardCharsets.UTF_8);
@@ -202,37 +209,42 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 
                              file.delete();
                          }
-                         else{   // If a normal command's response
+                         else {   // If a normal command's response
                         LOGGER.log(Level.INFO,"Responding to corrID: "+ properties.getCorrelationId() +  ", on Queue : " + RESPONSE_QUEUE_NAME);
                         LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
                         LOGGER.log(Level.INFO,"Application    :   " + RPC_QUEUE_NAME);
                         LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
-                        String responseMsg = new String(body, StandardCharsets.UTF_8);
-                        org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
+
+
+                         String responseMsg = new String(body, StandardCharsets.UTF_8);
+                         org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
+
                         if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
                             return;
-                        String status=responseJson.get("status").toString() ;
-                        FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1,
-                                mapToStatus(status),
-                                copiedBuffer(responseJson.get("response").toString().getBytes()));
-                        org.json.JSONObject headers = (org.json.JSONObject) responseJson.get("Headers");
-                        Iterator<String> keys = headers.keys();
-                        while (keys.hasNext()) {
-                            String key = keys.next();
-                            if(key.toLowerCase().contains("content")){
-                                continue;
-                            }
-                            String value = (String) headers.get(key);
-                            response.headers().set(key, value);
-                        }
-                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
-                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-                        response.headers().set(HttpHeaderNames.CONNECTION,HttpHeaderValues.KEEP_ALIVE);
-                        //System.out.println(NettyServerInitializer.getUuid().remove(properties.getCorrelationId()));
-                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
-                        ctxRec.writeAndFlush(response);
-                        ctxRec.close();
+                        responseJson.put("uuid",properties.getCorrelationId());
+//                        String status=responseJson.get("status").toString() ;
+//                        FullHttpResponse response = new DefaultFullHttpResponse(
+//                                HttpVersion.HTTP_1_1,
+//                                mapToStatus(status),
+//                                copiedBuffer(responseJson.get("response").toString().getBytes()));
+//                        org.json.JSONObject headers = (org.json.JSONObject) responseJson.get("Headers");
+//                        Iterator<String> keys = headers.keys();
+//                        while (keys.hasNext()) {
+//                            String key = keys.next();
+//                            if(key.toLowerCase().contains("content")){
+//                                continue;
+//                            }
+//                            String value = (String) headers.get(key);
+//                            response.headers().set(key, value);
+//                        }
+//                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+//                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+//                        response.headers().set(HttpHeaderNames.CONNECTION,HttpHeaderValues.KEEP_ALIVE);
+//                        //System.out.println(NettyServerInitializer.getUuid().remove(properties.getCorrelationId()));
+//                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
+//                        ctxRec.writeAndFlush(response);
+//                        ctxRec.close();
+                        responseQueueChannel.basicPublish("","SERVER-RESPONSE",properties,responseJson.toString().getBytes(StandardCharsets.UTF_8));
                          }
 
                     } catch (RuntimeException| IOException e) {
@@ -295,15 +307,20 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 //                    Controller.channel.writeAndFlush(new ErrorLog(LogLevel.INFO, "Responding to corrID: " + properties.getCorrelationId() + ", on Queue : " + RPC_QUEUE_NAME));
                     LOGGER.log(Level.INFO,"Responding to corrID: " + properties.getCorrelationId() + ", on Queue : " + REQUEST_QUEUE_NAME);
                     LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
+//                    ChannelHandlerContext ctx = getNewCtx();
                     try {
                         String message;
+
                         //Using Reflection to convert a command String to its appropriate class
                         MediaServerRequest mediaServerRequest =MediaServerRequest.getObject(body);
+//                        ServerRequest req = ServerRequest.getObject(body);
                         if(mediaServerRequest !=null){
                             message= mediaServerRequest.getJsonRequest().toString();
-                        }
-                        else{
+
+
+                        }else{
                             message = new String(body, StandardCharsets.UTF_8);
+                            
                         }
 
                         JSONParser parser = new JSONParser();
@@ -321,6 +338,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
                         Command cmd = (Command) last_com.newInstance();
                         TreeMap<String, Object> init = new TreeMap<>();
                         init.put("channel", requestQueueChannel);
+//                        init.put("ctx", ctx);
                         init.put("properties", properties);
                         init.put("replyProps", replyProps);
                         init.put("envelope", envelope);
@@ -610,5 +628,213 @@ public abstract class ServiceControl {    // This class is responsible for Manag
         String mimeType = mimeTypesMap.getContentType(file);
 
         response.headers().set(CONTENT_TYPE, mimeType);
+    }
+    private ChannelHandlerContext getNewCtx(){
+        return  new ChannelHandlerContext() {
+            @Override
+            public io.netty.channel.Channel channel() {
+                return null;
+            }
+
+            @Override
+            public EventExecutor executor() {
+                return null;
+            }
+
+            @Override
+            public String name() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandler handler() {
+                return null;
+            }
+
+            @Override
+            public boolean isRemoved() {
+                return false;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelRegistered() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelUnregistered() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelActive() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelInactive() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireExceptionCaught(Throwable cause) {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireUserEventTriggered(Object evt) {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelRead(Object msg) {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelReadComplete() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext fireChannelWritabilityChanged() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext read() {
+                return null;
+            }
+
+            @Override
+            public ChannelHandlerContext flush() {
+                return null;
+            }
+
+            @Override
+            public ChannelPipeline pipeline() {
+                return null;
+            }
+
+            @Override
+            public ByteBufAllocator alloc() {
+                return null;
+            }
+
+            @Override
+            public <T> Attribute<T> attr(AttributeKey<T> key) {
+                return null;
+            }
+
+            @Override
+            public <T> boolean hasAttr(AttributeKey<T> key) {
+                return false;
+            }
+
+            @Override
+            public ChannelFuture bind(SocketAddress localAddress) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture connect(SocketAddress remoteAddress) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture disconnect() {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture close() {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture deregister() {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture connect(SocketAddress remoteAddress, ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture disconnect(ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture close(ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture deregister(ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture write(Object msg) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture write(Object msg, ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture writeAndFlush(Object msg, ChannelPromise promise) {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture writeAndFlush(Object msg) {
+                return null;
+            }
+
+            @Override
+            public ChannelPromise newPromise() {
+                return null;
+            }
+
+            @Override
+            public ChannelProgressivePromise newProgressivePromise() {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture newSucceededFuture() {
+                return null;
+            }
+
+            @Override
+            public ChannelFuture newFailedFuture(Throwable cause) {
+                return null;
+            }
+
+            @Override
+            public ChannelPromise voidPromise() {
+                return null;
+            }
+        };
     }
 }
