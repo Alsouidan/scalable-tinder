@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Jun 06, 2021 2:58:36 AM NettyWebServer.NettyServer start
 INFO: Web Server is listening on http://127.0.0.1:8020/
 Jun 06, 2021 2:58:36 AM NettyWebServer.NettyServer start
@@ -223,3 +224,13 @@ java.net.ConnectException: Connection refused
 	at RunBackEnd.lambda$run$1(RunBackEnd.java:65)
 	at java.base/java.lang.Thread.run(Thread.java:832)
 
+=======
+Jun 19, 2021 1:43:25 AM Interface.ServiceControl consumeFromRequestQueue
+INFO:  [x] Awaiting RPC requests on Queue : UserToUser-Request
+Jun 19, 2021 1:43:29 AM Controller.Controller sendResponse
+INFO: ERROR
+Jun 19, 2021 1:44:20 AM Controller.Controller sendResponse
+INFO: SERVICE RESUMED
+Jun 19, 2021 1:44:27 AM Controller.Controller sendResponse
+INFO: SERVICE FROZE
+>>>>>>> 1ffe6bbf30b546bf92bbaab3776f45926da1893a

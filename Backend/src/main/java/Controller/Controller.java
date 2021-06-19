@@ -39,14 +39,13 @@ import java.util.logging.Logger;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;
 
-public class Controller {
+public class Controller implements Runnable{
 
     public static Channel channel;
     Config conf = Config.getInstance();
     private String server = conf.getControllerHost();
-    private int port = conf.getControllerPort();
-    private HashMap<String, HashMap<String,ServiceControl>>  availableServices = new HashMap<>();
-    private HashMap<String,Integer> instancesCounts = new HashMap<String, Integer>();
+    private ServiceControl service;
+    private int port;
     public static final Logger LOGGER = Logger.getLogger(Controller.class.getName()) ;
 
     //    public static void main(String[] args) {
@@ -57,16 +56,9 @@ public class Controller {
 //        }).start();
 //        c.startService();
 //    }
-    public Controller(){
-        availableServices.putIfAbsent(conf.getServicesMqUserQueue(),new HashMap<>());
-        availableServices.putIfAbsent(conf.getServicesMqModeratorQueue(),new HashMap<>());
-        availableServices.putIfAbsent(conf.getServicesMqUserToUserQueue(),new HashMap<>());
-        availableServices.putIfAbsent(conf.getServicesMqChatQueue(),new HashMap<>());
-        instancesCounts.putIfAbsent(conf.getServicesMqUserQueue(),0);
-        instancesCounts.putIfAbsent(conf.getServicesMqUserToUserQueue(),0);
-        instancesCounts.putIfAbsent(conf.getServicesMqModeratorQueue(),0);
-        instancesCounts.putIfAbsent(conf.getServicesMqChatQueue(),0);
-
+    public Controller(ServiceControl service, int port){
+        this.service = service;
+        this.port = port;
         MyLogger main_logger = new MyLogger();
         main_logger.initialize();
     }
@@ -90,52 +82,52 @@ public class Controller {
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
         ctx.writeAndFlush(response);
     }
-    public ServiceControl initService(ServicesType serviceName) {
-        ServiceControl service = null;
-        switch (serviceName) {
-            case user: {
-
-                
-                int newId = instancesCounts.get(conf.getServicesMqUserQueue()) + 1;
-                service = new UserService(newId);
-                instancesCounts.replace(conf.getServicesMqUserQueue(), newId);
-                availableServices.get(conf.getServicesMqUserQueue()).putIfAbsent(newId + "", service);
-                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
-
-                break;
-            }
-            case user_to_user: {
-
-//                this.serviceName = conf.getServicesMqUserToUserQueue();
-                int newId = instancesCounts.get(conf.getServicesMqUserToUserQueue()) + 1;
-                service = new UserToUserService(newId);
-                instancesCounts.replace(conf.getServicesMqUserToUserQueue(), newId);
-                availableServices.get(conf.getServicesMqUserToUserQueue()).putIfAbsent(newId + "", service);
-                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
-                break;
-            }
-            case moderator: {
-
-//                this.serviceName = conf.getServicesMqModeratorQueue();
-                int newId = instancesCounts.get(conf.getServicesMqModeratorQueue()) + 1;
-                service = new ModeratorService(newId);
-                instancesCounts.replace(conf.getServicesMqModeratorQueue(), newId);
-                availableServices.get(conf.getServicesMqModeratorQueue()).putIfAbsent(newId + "", service);
-                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
-                break;
-            }
-            case chat:
-//                this.serviceName = conf.getServicesMqChatQueue();
-                int newId = instancesCounts.get(conf.getServicesMqChatQueue()) + 1;
-                service = new ChatService(newId);
-                instancesCounts.replace(conf.getServicesMqChatQueue(), newId);
-                availableServices.get(conf.getServicesMqChatQueue()).putIfAbsent(newId + "", service);
-                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
-                break;
-            // TODO ADD SERVICE
-        }
-        return service;
-    }
+//    public ServiceControl initService(ServicesType serviceName) {
+//        ServiceControl service = null;
+//        switch (serviceName) {
+//            case user: {
+//
+//
+//                int newId = instancesCounts.get(conf.getServicesMqUserQueue()) + 1;
+//                service = new UserService(newId);
+//                instancesCounts.replace(conf.getServicesMqUserQueue(), newId);
+//                availableServices.get(conf.getServicesMqUserQueue()).putIfAbsent(newId + "", service);
+//                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
+//
+//                break;
+//            }
+//            case user_to_user: {
+//
+////                this.serviceName = conf.getServicesMqUserToUserQueue();
+//                int newId = instancesCounts.get(conf.getServicesMqUserToUserQueue()) + 1;
+//                service = new UserToUserService(newId);
+//                instancesCounts.replace(conf.getServicesMqUserToUserQueue(), newId);
+//                availableServices.get(conf.getServicesMqUserToUserQueue()).putIfAbsent(newId + "", service);
+//                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
+//                break;
+//            }
+//            case moderator: {
+//
+////                this.serviceName = conf.getServicesMqModeratorQueue();
+//                int newId = instancesCounts.get(conf.getServicesMqModeratorQueue()) + 1;
+//                service = new ModeratorService(newId);
+//                instancesCounts.replace(conf.getServicesMqModeratorQueue(), newId);
+//                availableServices.get(conf.getServicesMqModeratorQueue()).putIfAbsent(newId + "", service);
+//                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
+//                break;
+//            }
+//            case chat:
+////                this.serviceName = conf.getServicesMqChatQueue();
+//                int newId = instancesCounts.get(conf.getServicesMqChatQueue()) + 1;
+//                service = new ChatService(newId);
+//                instancesCounts.replace(conf.getServicesMqChatQueue(), newId);
+//                availableServices.get(conf.getServicesMqChatQueue()).putIfAbsent(newId + "", service);
+//                System.out.println("INSTANCE "+newId+" OF SERVICE "+serviceName+" IS RUNNING");
+//                break;
+//            // TODO ADD SERVICE
+//        }
+//        return service;
+//    }
 
     public void startServices() {
 //        for(String service : availableServices.keySet()){
@@ -143,7 +135,7 @@ public class Controller {
 //        }
     }
 
-    public void start() {
+    public void run() {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -152,7 +144,7 @@ public class Controller {
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
 //                    .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new ControllerAdapterInitializer(availableServices));
+                    .childHandler(new ControllerAdapterInitializer(service));
 //            b.option(ChannelOption.SO_KEEPALIVE, true);
             Channel ch = b.bind(port).sync().channel();
             Controller.channel = ch;

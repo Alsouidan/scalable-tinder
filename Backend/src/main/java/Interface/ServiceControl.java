@@ -96,6 +96,7 @@ public abstract class ServiceControl {    // This class is responsible for Manag
         RESPONSE_QUEUE_NAME = RPC_QUEUE_NAME + RESPONSE_EXTENSION;
         this.ID = ID;
         redis = new RedisConnection();
+        executor.execute(new Controller(this,ID));
     }
 
     public MinioInstance getMinioInstance() {
@@ -112,7 +113,6 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 
     public void start() {
         consumeFromRequestQueue();
-        consumeFromResponseQueue();
     }
 
     
@@ -127,101 +127,97 @@ public abstract class ServiceControl {    // This class is responsible for Manag
         }
     }
 
-    private void consumeFromResponseQueue() {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(host);
-        factory.setPort(port);
-        factory.setUsername(user);
-        factory.setPassword(pass);
-        Connection connection = null;
 
-        try {
-            connection = factory.newConnection();
-            responseQueueChannel = connection.createChannel();
-            responseQueueChannel.queueDeclare(RESPONSE_QUEUE_NAME, true, false, false, null);
-            responseQueueChannel.basicQos(threadsNo);
-            LOGGER.log(Level.INFO," [x] Awaiting RPC RESPONSES on Queue : " + RESPONSE_QUEUE_NAME);
-            responseConsumer = new DefaultConsumer(responseQueueChannel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
-                    try {
-                        //Using Reflection to convert a command String to its appropriate class
-//                        Channel receiver = REQUEST_CHANNEL_MAP.get(RESPONSE_MAIN_QUEUE_NAME);
-
-                         MediaServerResponse msr=MediaServerResponse.getObject(body);
-                        
-                         if(msr!=null){   // If a download command
-                           body=msr.getResponseJson().toString().getBytes("UTF-8");
-                             String responseMsg = new String(body, StandardCharsets.UTF_8);
-
-                             org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
-                             System.out.println(responseJson);
-                             String status=responseJson.get("status").toString() ;
-                             byte[] fileByteArray = msr.getFile();
-                             File file=new File(msr.getFileName());
-
-                             FileOutputStream fos = null;
-                             try {
-                                 fos = new FileOutputStream(file);
-                                 fos.write(fileByteArray);
-                             }
-                             catch(Exception e){
-                                 e.printStackTrace();
-                             }
-
-
-                             RandomAccessFile raf;
-
-                             try {
-                                 raf = new RandomAccessFile(file, "r");
-                             } catch (FileNotFoundException fnfe) {
-                                 return;
-                             }
-
-                             long fileLength = 0;
-                             try {
-                                 fileLength = raf.length();
-                             } catch (IOException ex) {
-                                 Logger.getLogger(MediaHandler.class.getName()).log(Level.SEVERE, null, ex);
-                             }
-
-                             HttpResponse response = new DefaultHttpResponse(HTTP_1_1, mapToStatus(status));
-                             org.json.JSONObject headers = (org.json.JSONObject) responseJson.get("Headers");
-                             Iterator<String> keys = headers.keys();
-                             while (keys.hasNext()) {
-                                 String key = keys.next();
-                                 String value = (String) headers.get(key);
-                                 response.headers().set(key, value);
-                             }
-                             HttpUtil.setContentLength(response, fileLength);
-                             setContentTypeHeader(response,file);
-                             ChannelHandlerContext ctx = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
-
-                             // Write the initial line and the header.
-                             ctx.write(response);
-                             ChannelFuture sendFileFuture;
-                             DefaultFileRegion defaultRegion = new DefaultFileRegion(raf.getChannel(), 0, fileLength);
-                             sendFileFuture = ctx.write(defaultRegion);
-                             // Write the end marker
-                             ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-                             ctx.close();
-                             // Write the content.
-
-                             file.delete();
-                         }
-                         else {   // If a normal command's response
-                        LOGGER.log(Level.INFO,"Responding to corrID: "+ properties.getCorrelationId() +  ", on Queue : " + RESPONSE_QUEUE_NAME);
-                        LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
-                        LOGGER.log(Level.INFO,"Application    :   " + RPC_QUEUE_NAME);
-                        LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
-
-
-                         String responseMsg = new String(body, StandardCharsets.UTF_8);
-                         org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
-
-                        if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
-                            return;
-                        responseJson.put("uuid",properties.getCorrelationId());
+//    private void consumeFromResponseQueue() {
+//        ConnectionFactory factory = new ConnectionFactory();
+//        factory.setHost(host);
+//        factory.setPort(port);
+//        factory.setUsername(user);
+//        factory.setPassword(pass);
+//        Connection connection = null;
+//
+//        try {
+//            connection = factory.newConnection();
+//            responseQueueChannel = connection.createChannel();
+//            responseQueueChannel.queueDeclare(RESPONSE_QUEUE_NAME, true, false, false, null);
+//            responseQueueChannel.basicQos(threadsNo);
+//            LOGGER.log(Level.INFO," [x] Awaiting RPC RESPONSES on Queue : " + RESPONSE_QUEUE_NAME);
+//            responseConsumer = new DefaultConsumer(responseQueueChannel) {
+//                @Override
+//                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+//                    try {
+//                        //Using Reflection to convert a command String to its appropriate class
+////                        Channel receiver = REQUEST_CHANNEL_MAP.get(RESPONSE_MAIN_QUEUE_NAME);
+//
+//                         MediaServerResponse msr=MediaServerResponse.getObject(body);
+//                         if(msr!=null){   // If a download command
+//                           body=msr.getResponseJson().toString().getBytes("UTF-8");
+//                             String responseMsg = new String(body, StandardCharsets.UTF_8);
+//
+//                             org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
+//                             System.out.println(responseJson);
+//                             String status=responseJson.get("status").toString() ;
+//                             byte[] fileByteArray = msr.getFile();
+//                             File file=new File(msr.getFileName());
+//
+//                             FileOutputStream fos = null;
+//                             try {
+//                                 fos = new FileOutputStream(file);
+//                                 fos.write(fileByteArray);
+//                             }
+//                             catch(Exception e){
+//                                 e.printStackTrace();
+//                             }
+//
+//
+//                             RandomAccessFile raf;
+//
+//                             try {
+//                                 raf = new RandomAccessFile(file, "r");
+//                             } catch (FileNotFoundException fnfe) {
+//                                 return;
+//                             }
+//
+//                             long fileLength = 0;
+//                             try {
+//                                 fileLength = raf.length();
+//                             } catch (IOException ex) {
+//                                 Logger.getLogger(MediaHandler.class.getName()).log(Level.SEVERE, null, ex);
+//                             }
+//
+//                             HttpResponse response = new DefaultHttpResponse(HTTP_1_1, mapToStatus(status));
+//                             org.json.JSONObject headers = (org.json.JSONObject) responseJson.get("Headers");
+//                             Iterator<String> keys = headers.keys();
+//                             while (keys.hasNext()) {
+//                                 String key = keys.next();
+//                                 String value = (String) headers.get(key);
+//                                 response.headers().set(key, value);
+//                             }
+//                             HttpUtil.setContentLength(response, fileLength);
+//                             setContentTypeHeader(response,file);
+//                             ChannelHandlerContext ctx = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
+//
+//                             // Write the initial line and the header.
+//                             ctx.write(response);
+//                             ChannelFuture sendFileFuture;
+//                             DefaultFileRegion defaultRegion = new DefaultFileRegion(raf.getChannel(), 0, fileLength);
+//                             sendFileFuture = ctx.write(defaultRegion);
+//                             // Write the end marker
+//                             ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+//                             ctx.close();
+//                             // Write the content.
+//
+//                             file.delete();
+//                         }
+//                         else{   // If a normal command's response
+//                        LOGGER.log(Level.INFO,"Responding to corrID: "+ properties.getCorrelationId() +  ", on Queue : " + RESPONSE_QUEUE_NAME);
+//                        LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
+//                        LOGGER.log(Level.INFO,"Application    :   " + RPC_QUEUE_NAME);
+//                        LOGGER.log(Level.INFO,"INSTANCE NUM   :   " + ID);
+//                        String responseMsg = new String(body, StandardCharsets.UTF_8);
+//                        org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
+//                        if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
+//                            return;
 //                        String status=responseJson.get("status").toString() ;
 //                        FullHttpResponse response = new DefaultFullHttpResponse(
 //                                HttpVersion.HTTP_1_1,
@@ -244,37 +240,38 @@ public abstract class ServiceControl {    // This class is responsible for Manag
 //                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
 //                        ctxRec.writeAndFlush(response);
 //                        ctxRec.close();
-                        responseQueueChannel.basicPublish("","SERVER-RESPONSE",properties,responseJson.toString().getBytes(StandardCharsets.UTF_8));
-                         }
 
-                    } catch (RuntimeException| IOException e) {
-                        FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1,
-                                HttpResponseStatus.BAD_REQUEST,
-                                copiedBuffer("ERROR".toString().getBytes()));
+//                         }
+//
+//                    } catch (RuntimeException| IOException e) {
+//                        FullHttpResponse response = new DefaultFullHttpResponse(
+//                                HttpVersion.HTTP_1_1,
+//                                HttpResponseStatus.BAD_REQUEST,
+//                                copiedBuffer("ERROR".toString().getBytes()));
+//
+//                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+//                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+//
+//                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
+//                        ctxRec.writeAndFlush(response);
+//                        ctxRec.close();
+//                        LOGGER.log(Level.SEVERE,e.getMessage(),e);
+//                        consumeFromResponseQueue();
+//                    } finally {
+//                        synchronized (this) {
+//                            this.notify();
+//                        }
+//                    }
+//                }
+//            };
+//            responseConsumerTag = responseQueueChannel.basicConsume(RESPONSE_QUEUE_NAME, true, responseConsumer);
+//            // Wait and be prepared to consume the message from RPC client.
+//        } catch (Exception e) {
+//            LOGGER.log(Level.SEVERE,e.getMessage(),e);
+////            consumeFromQueue(RPC_QUEUE_NAME,QUEUE_TO);
+//        }
+//    }
 
-                        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
-                        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-
-                        ChannelHandlerContext ctxRec = NettyServerInitializer.getUuid().remove(properties.getCorrelationId());
-                        ctxRec.writeAndFlush(response);
-                        ctxRec.close();
-                        LOGGER.log(Level.SEVERE,e.getMessage(),e);
-                        consumeFromResponseQueue();
-                    } finally {
-                        synchronized (this) {
-                            this.notify();
-                        }
-                    }
-                }
-            };
-            responseConsumerTag = responseQueueChannel.basicConsume(RESPONSE_QUEUE_NAME, true, responseConsumer);
-            // Wait and be prepared to consume the message from RPC client.
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE,e.getMessage(),e);
-//            consumeFromQueue(RPC_QUEUE_NAME,QUEUE_TO);
-        }
-    }
 
     private void consumeFromRequestQueue() {
 
@@ -398,8 +395,8 @@ public abstract class ServiceControl {    // This class is responsible for Manag
     public boolean resume() {
         try {
             requestConsumerTag = requestQueueChannel.basicConsume(REQUEST_QUEUE_NAME, false, requestConsumer);
-            responseConsumerTag =responseQueueChannel.basicConsume(RESPONSE_QUEUE_NAME, false, responseConsumer);
-            return true;
+//            responseConsumerTag =responseQueueChannel.basicConsume(RESPONSE_QUEUE_NAME, false, responseConsumer);
+
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE,e.getMessage(),e);
             StringWriter errors = new StringWriter();
@@ -407,13 +404,14 @@ public abstract class ServiceControl {    // This class is responsible for Manag
             Controller.channel.writeAndFlush(new ErrorLog(LogLevel.ERROR, errors.toString()));
             return false;
         }
+        return true;
 //        Controller.channel.writeAndFlush(new ErrorLog(LogLevel.INFO, "Service Resumed"));
     }
 
     public boolean freeze() {
         try {
             requestQueueChannel.basicCancel(requestConsumerTag);
-            responseQueueChannel.basicCancel(responseConsumerTag);
+//            responseQueueChannel.basicCancel(responseConsumerTag);
             return true;
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE,e.getMessage(),e);

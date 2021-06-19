@@ -23,10 +23,9 @@ import java.util.HashMap;
 
 public class ControllerAdapterInitializer extends ChannelInitializer<SocketChannel> {
 
-    private HashMap<String, HashMap<String,ServiceControl>> availableServices = new HashMap<>();
-
-    public ControllerAdapterInitializer(HashMap<String, HashMap<String,ServiceControl>> services) {
-        this.availableServices = services;
+    private ServiceControl service;
+    public ControllerAdapterInitializer(ServiceControl service) {
+        this.service= service;
     }
 
     @Override
@@ -41,7 +40,7 @@ public class ControllerAdapterInitializer extends ChannelInitializer<SocketChann
         p.addLast(new CorsHandler(corsConfig));
         p.addLast(new HttpObjectAggregator(65536));
         p.addLast(new HTTPHandler());
-        p.addLast("handler", new ControllerAdapterHandler(availableServices));
+        p.addLast("handler", new ControllerAdapterHandler(service));
         p.addLast(new WebSocketServerProtocolHandler("/chat/update"));
         p.addLast(new TextWebSocketFrameHandler());
     }

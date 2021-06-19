@@ -13,6 +13,8 @@ import io.netty.handler.codec.http.cors.CorsConfig;
 import io.netty.handler.codec.http.cors.CorsConfigBuilder;
 import io.netty.handler.codec.http.cors.CorsHandler;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import org.json.JSONObject;
 
 
@@ -64,6 +66,7 @@ public class NettyServerInitializer extends ChannelInitializer<SocketChannel> {
                 .allowedRequestHeaders("X-Requested-With", "Content-Type", "Content-Length")
                 .allowedRequestMethods(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE, HttpMethod.OPTIONS,HttpMethod.HEAD)
                 .build();
+        EventExecutorGroup exec = new DefaultEventExecutorGroup(20);
         ChannelPipeline p = arg0.pipeline();
         p.addLast("decoder", new HttpRequestDecoder());
         p.addLast("encoder", new HttpResponseEncoder());
@@ -72,7 +75,7 @@ public class NettyServerInitializer extends ChannelInitializer<SocketChannel> {
 
         p.addLast(new HTTPHandler());
         p.addLast(new MediaHandler());
-        p.addLast("MQ", new NettyWebServer.RequestHandler(senderChannel, uuid, RPC_QUEUE_REPLY_TO, RPC_QUEUE_SEND_TO));
+        p.addLast(exec, new NettyWebServer.RequestHandler(senderChannel, uuid, RPC_QUEUE_REPLY_TO, RPC_QUEUE_SEND_TO));
         //pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         p.addLast(new WebSocketServerProtocolHandler("/chat/update"));
         p.addLast(new TextWebSocketFrameHandler());

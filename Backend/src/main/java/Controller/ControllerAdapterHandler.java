@@ -27,11 +27,11 @@ import static io.netty.buffer.Unpooled.copiedBuffer;
 
 public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
 
-    private HashMap<String, HashMap<String,ServiceControl>> availableServices ;
+    private ServiceControl service ;
     private final Logger LOGGER = Logger.getLogger(ControllerAdapterHandler.class.getName()) ;
 
-    public ControllerAdapterHandler(HashMap<String, HashMap<String,ServiceControl>> availableServices) {
-        this.availableServices= availableServices;
+    public ControllerAdapterHandler(ServiceControl service) {
+        this.service= service;
     }
 
     @Override
@@ -46,12 +46,11 @@ public class ControllerAdapterHandler extends ChannelInboundHandlerAdapter {
             final String corrId = (String) channelHandlerContext.channel().attr(AttributeKey.valueOf("CORRID")).get();
             jsonRequest.put("command", body.get("command"));
             String service_s = (String) body.get("application");
-            String instance = (String) body.get("instance_num");
+
             String param = (String) body.get("param");
             String path = (String) body.get("path");
             jsonRequest.put("application", service_s);
             jsonRequest.put("body", body);
-            ServiceControl service = availableServices.get(service_s).get(instance);
             String responseMessage = controlService(channelHandlerContext,service,(String)(body.get("command")),param,path);
 
 //            Controller.sendResponse(channelHandlerContext,responseMessage,false);

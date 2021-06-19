@@ -424,9 +424,6 @@ public class ArangoInstance {
             createProfileViews();
             createChats();
         }
-
-
-
-
+        
     }
     

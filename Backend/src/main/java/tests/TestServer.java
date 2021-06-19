@@ -48,21 +48,11 @@ public class TestServer {
     }
 
     public void initialize(){
-        Controller c = new Controller();
+       
         for(ServicesType type:services) {
             for(int i =0;i<getInitialInstanceNum(type);i++) {
-                ServiceControl s = c.initService(type);
-               Thread t =  new Thread(() -> {
-                    s.start();
-                });
-               t.start();
-               try {
-                   t.join();
-                   t.setDaemon(false);
-                   Thread.sleep(200);
-               }catch(Exception e){
-                   e.printStackTrace();
-               }
+
+             
               
             }
         }
