@@ -61,6 +61,6 @@ public class ModeratorService extends ServiceControl {
 
 
     public static void main(String[] args) {
-        new ModeratorService(0).start();
+        new ModeratorService(12000).start();
     }
 }

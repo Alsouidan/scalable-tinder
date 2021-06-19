@@ -54,6 +54,6 @@ public class ChatService extends ServiceControl{
     }
 
     public static void main(String[] args) {
-        new ChatService(0).start();
+        new ChatService(12000).start();
     }
 }

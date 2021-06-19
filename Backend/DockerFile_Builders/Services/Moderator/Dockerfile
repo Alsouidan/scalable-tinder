@@ -27,6 +27,7 @@ RUN mvn -T 1C install && rm -rf target
 COPY src /usr/src/app/Backend/src
 RUN mvn compile
 RUN mvn package
+EXPOSE 12000
 ENTRYPOINT ["mvn","exec:java","-D","exec.mainClass=Services.ModeratorService"]
 # RUN java -cp target/Backend-1.0-SNAPSHOT.jar NettyWebServer.NettyServer
 # CMD ["mvn","java"]

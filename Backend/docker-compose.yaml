@@ -48,6 +48,8 @@ services:
 
   user_service:
     image: scalable2021/backend_user_service
+    ports:
+      - "12000:12000"
     depends_on:
       - "rabbitmq_queues"
     links:
@@ -58,6 +60,8 @@ services:
 #
   moderator_service:
     image: scalable2021/backend_moderator_service
+    ports:
+      - "12000:12000"
     depends_on:
       - "rabbitmq_queues"
     links:
@@ -67,6 +71,8 @@ services:
       dockerfile: "DockerFile_Builders/Services/Moderator/Dockerfile"
   user_to_user_service:
     image: scalable2021/backend_user_to_user_service
+    ports:
+      - "12000:12000"
     depends_on:
       - "rabbitmq_queues"
     links:
@@ -80,6 +86,8 @@ services:
       - "rabbitmq_queues"
     links:
       - "rabbitmq_queues"
+    ports:
+      - "12000:12000"
     build:
       context: .
       dockerfile: "DockerFile_Builders/Services/Chat/Dockerfile"
