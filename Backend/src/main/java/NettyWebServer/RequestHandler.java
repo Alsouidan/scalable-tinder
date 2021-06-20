@@ -232,6 +232,7 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
                         LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
                         LOGGER.log(Level.INFO,"Application    :   " + queue_name);
                         String responseMsg = new String(body, StandardCharsets.UTF_8);
+                        responseMsg = responseMsg.substring(responseMsg.indexOf("{"));
                         org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
                         if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
                             return;
