@@ -179,17 +179,17 @@ services:
       ARANGO_ROOT_PASSWORD: rootpassword
       ARANGO_DB: tinderDB
       ARANGODB_USERNAME: root
-      ARANGODB_PASSWORD: 
+      ARANGODB_PASSWORD: rootpassword
       ARANGODB_COL1: userData
       ARANGODB_COL2: chats
       ARANGODB_COL3: profileViews
       ARANGODB_COL4: notifications
     expose:
         - "8529"
-    volumes:
-      - arangodb_data_container:/var/lib/arangodb3
-      - arangodb_apps_data_container:/var/lib/arangodb3-apps
-    command: arangod
+#    volumes:
+#      - arangodb_data_container:/var/lib/arangodb3
+#      - arangodb_apps_data_container:/var/lib/arangodb3-apps
+#    command: arangod
 
   minio1:
     image: minio/minio:RELEASE.2021-06-09T18-51-39Z

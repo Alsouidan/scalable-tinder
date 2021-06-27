@@ -35,7 +35,7 @@ public class ArangoInstance {
         private final Logger LOGGER = Logger.getLogger(ArangoInstance.class.getName()) ;
         public ArangoInstance(int maxConnections) {
             gson = new Gson();
-            arangoDB = new ArangoDB.Builder().host(conf.getArangoHost(), conf.getArangoPort()).user(dbUserName).maxConnections(maxConnections).build();
+            arangoDB = new ArangoDB.Builder().host(conf.getArangoHost(), conf.getArangoPort()).user(dbUserName).password(dbPass).maxConnections(maxConnections).build();
 //            Client.channel.writeAndFlush(new ErrorLog(LogLevel.INFO,"Database connected: POST"));
            dbInstance = arangoDB;
 
