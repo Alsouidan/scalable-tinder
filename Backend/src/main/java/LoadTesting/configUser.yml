@@ -1,0 +1,106 @@
+# Load tests the user service ONLY
+config:
+  target: 'http://localhost:8021'
+  phases:
+    - duration: 2
+      arrivalRate: 10
+before:
+ flow:
+  - post:
+        url: "/ss"
+        json:
+          userData:
+                email: "ariannagrande@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "User"
+        capture:
+          json: "$.token"
+          as: "userToken"
+
+
+  
+
+scenarios:
+  - name: "SignIn User"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          userData:
+                email: "ariannagrande@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "User"
+  
+  - name: "Get User Data Paginated"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         page: 0
+         limit: 5
+         command: "GetUserDataPaginated"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+  # UNCOMMENT WHEN FIXED
+  # - name: "Create Transaction"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        transactionData:
+  #               user_id: 1
+  #               amount: 500
+  #        command: "CreateTransaction"
+  #        application: "User"
+  #       headers:
+  #        authorization: "{{ userToken }}"
+ 
+  - name: "Update Transaction"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         transactionData:
+                in_id: 1
+                in_user_id: 16
+                in_amount: 3000
+         command: "UpdateTransaction"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+
+  - name: "Get All User Transactions"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         page: 0
+         limit: 1 
+         transactionData:
+          in_user_id: 16
+         command: "GetAllUserTransactions"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+
+  - name: "Get Transcation"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         transactionData:
+          in_id: 1
+         command: "GetTransaction"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+  
+  
+  
+  
+         
+  
+  

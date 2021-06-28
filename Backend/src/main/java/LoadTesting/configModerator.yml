@@ -1,0 +1,101 @@
+# Load tests the moderator service ONLY
+config:
+  target: 'http://localhost:8021'
+  phases:
+    - duration: 2
+      arrivalRate: 10
+before:
+ flow:
+    - post:
+        url: "/ss"
+        json:
+          moderatorData:
+                email: "hussein.badr@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "Moderator"
+        capture:
+          json: "$.token"
+          as: "moderatorToken"
+
+
+  
+
+scenarios:
+  - name: "SignIn Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          moderatorData:
+                email: "hussein.badr@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "Moderator"
+  
+  - name: "Create Interest Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         interestinfo:
+            name: "loadTest"
+         command: "CreateInterest"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+
+  - name: "Get All Notifications Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         limit: 5
+         page: 0
+         command: "GetAllNotifications"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  - name: "Get All Interests Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         limit: 5
+         page: 0
+         command: "GetAllInterests"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  # UNCOMMENT WHEN FIXED
+  # - name: "Update Bans Moderator"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        banData:
+  #         id: 1
+  #         reason: "UPDATE"
+  #        command: "UpdateBan"
+  #        application: "Moderator"
+  #       headers:
+  #        authorization: "{{ moderatorToken }}"
+
+  - name: "Interest"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         interestinfo:
+          id: 1
+          name: "UPDATE LOAD DET"
+         command: "UpdateInterest"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  
+  
+  
+         
+  
+  

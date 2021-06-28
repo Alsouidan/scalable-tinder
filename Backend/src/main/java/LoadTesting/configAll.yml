@@ -1,0 +1,253 @@
+# Load tests all the services
+# Load tests the moderator service ONLY
+config:
+  target: 'http://localhost:8021'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+before:
+ flow:
+    - post:
+        url: "/ss"
+        json:
+          moderatorData:
+                email: "hussein.badr@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "Moderator"
+        capture:
+          json: "$.token"
+          as: "moderatorToken"
+    - put:
+        url: "/sss"
+        json:
+          userData:
+                email: "ariannagrande@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "User"
+        capture:
+          json: "$.token"
+          as: "userToken"
+
+
+  
+
+scenarios:
+  - name: "SignIn Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          moderatorData:
+                email: "hussein.badr@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "Moderator"
+  
+  - name: "Create Interest Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         interestinfo:
+            name: "loadTest"
+         command: "CreateInterest"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+
+  - name: "Get All Notifications Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         limit: 5
+         page: 0
+         command: "GetAllNotifications"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  - name: "Get All Interests Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         limit: 5
+         page: 0
+         command: "GetAllInterests"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  # UNCOMMENT WHEN FIXED
+  # - name: "Update Bans Moderator"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        banData:
+  #         id: 1
+  #         reason: "UPDATE"
+  #        command: "UpdateBan"
+  #        application: "Moderator"
+  #       headers:
+  #        authorization: "{{ moderatorToken }}"
+
+  - name: "Interest"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         interestinfo:
+          id: 1
+          name: "UPDATE LOAD DET"
+         command: "UpdateInterest"
+         application: "Moderator"
+        headers:
+         authorization: "{{ moderatorToken }}"
+  - name: "SignIn User"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          userData:
+                email: "ariannagrande@gmail.com"
+                password: "12345678"
+          command: "SignIn"
+          application: "User"
+  
+  - name: "Get User Data Paginated"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         page: 0
+         limit: 5
+         command: "GetUserDataPaginated"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+  # UNCOMMENT WHEN FIXED
+  # - name: "Create Transaction"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        transactionData:
+  #               user_id: 1
+  #               amount: 500
+  #        command: "CreateTransaction"
+  #        application: "User"
+  #       headers:
+  #        authorization: "{{ userToken }}"
+ 
+  - name: "Update Transaction"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         transactionData:
+                in_id: 1
+                in_user_id: 16
+                in_amount: 3000
+         command: "UpdateTransaction"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+
+  - name: "Get All User Transactions"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         page: 0
+         limit: 1 
+         transactionData:
+          in_user_id: 16
+         command: "GetAllUserTransactions"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+
+  - name: "Get Transcation"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         transactionData:
+          in_id: 1
+         command: "GetTransaction"
+         application: "User"
+        headers:
+         authorization: "{{ userToken }}"
+  
+  - name: "Create Block"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          blockData:
+                source_user_id: 1
+                target_user_id: 2
+                created_at: "11-11-1998"
+          command: "CreateBlock"
+          application: "UserToUser"
+        headers:
+         authorization: "{{ userToken }}"
+  # UNCOMMENT WHEN FIXED
+  # - name: "Get Matches"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        userData:
+  #           id: 1
+  #        command: "GetMatches"
+  #        application: "User"
+  #       headers:
+  #        authorization: "{{ userToken }}"
+
+ 
+  - name: "Get All Profile Views"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         page: 0
+         limit: 5
+         command: "GetAllProfileViews"
+         application: "UserToUser"
+        headers:
+         authorization: "{{ userToken }}"
+  
+
+  # UNCOMMENT WHEN FIXED
+  # - name: "Get All Interactions"
+  #   flow:
+  #   - post:
+  #       url: "/ss"
+  #       json:
+  #        page: 0
+  #        limit: 1 
+  #        command: "GetAllInteractions"
+  #        application: "User"
+  #       headers:
+  #        authorization: "{{ userToken }}"
+
+  - name: "Get Chat"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+         chatData:
+          id: 1
+         command: "GetChat"
+         application: "Chat"
+        headers:
+         authorization: "{{ userToken }}"
+  
+  
+  
+         
+  
+  
