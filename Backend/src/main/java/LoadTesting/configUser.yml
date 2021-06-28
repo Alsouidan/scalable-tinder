@@ -1,8 +1,8 @@
 # Load tests the user service ONLY
 config:
-  target: 'http://localhost:8021'
+  target: 'http://localhost:90'
   phases:
-    - duration: 2
+    - duration: 9
       arrivalRate: 10
 before:
  flow:

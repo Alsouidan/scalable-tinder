@@ -66,7 +66,7 @@ public class NettyServerInitializer extends ChannelInitializer<SocketChannel> {
                 .allowedRequestHeaders("X-Requested-With", "Content-Type", "Content-Length")
                 .allowedRequestMethods(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE, HttpMethod.OPTIONS,HttpMethod.HEAD)
                 .build();
-        EventExecutorGroup exec = new DefaultEventExecutorGroup(20);
+        EventExecutorGroup exec = new DefaultEventExecutorGroup(50);
         ChannelPipeline p = arg0.pipeline();
         p.addLast("decoder", new HttpRequestDecoder());
         p.addLast("encoder", new HttpResponseEncoder());
