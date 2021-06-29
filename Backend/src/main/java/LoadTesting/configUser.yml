@@ -2,8 +2,8 @@
 config:
   target: 'http://localhost:90'
   phases:
-    - duration: 9
-      arrivalRate: 10
+    - duration: 60
+      arrivalRate: 20
 before:
  flow:
   - post:
