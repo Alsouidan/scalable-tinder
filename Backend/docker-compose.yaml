@@ -1,7 +1,5 @@
 version: "3"
 services:
-
-
   server:
     image: scalable2021/backend_server
     build:
