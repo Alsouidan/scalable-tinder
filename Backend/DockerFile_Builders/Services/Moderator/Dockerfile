@@ -21,13 +21,16 @@ WORKDIR /usr/src/app/Backend
 # install maven dependency packages (keep in image)
 COPY ./pom.xml /usr/src/app/Backend
 RUN mvn clean
-RUN mvn -T 1C install && rm -rf target
+RUN mvn -T 1C install -DskipTests && rm -rf target
 # copy other source files (keep in image)
 
 COPY src /usr/src/app/Backend/src
 RUN mvn compile
-RUN mvn package
+
+RUN mvn package -DskipTests
 EXPOSE 12000
+
+
 ENTRYPOINT ["mvn","exec:java","-D","exec.mainClass=Services.ModeratorService"]
 # RUN java -cp target/Backend-1.0-SNAPSHOT.jar NettyWebServer.NettyServer
 # CMD ["mvn","java"]

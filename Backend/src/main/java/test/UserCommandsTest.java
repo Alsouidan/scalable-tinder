@@ -1,4 +1,4 @@
-package tests;
+package test;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserCommandsTest {
-    HelpersTest testHelpers = new HelpersTest();
+    Helpers testHelpers = new Helpers();
     @Test
-    @DisplayName("CreateTransaction")
-    public void createTransaction(){
+    @DisplayName("test CreateTransaction")
+    public void testCreateTransaction(){
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject transactionData = new JSONObject();
@@ -128,9 +128,9 @@ public class UserCommandsTest {
         body.put("page",0);
         body.put("limit",10);
         JSONObject transactionData = new JSONObject();
-        transactionData.put("in_user_id",16);
+        transactionData.put("in_user_id",15);
         body.put("transactionData", transactionData) ;
-        expected.put("user_id",16);
+        expected.put("user_id",15);
         JSONArray array = testHelpers.testListCommand("GetAllUserTransactions","User","transactions",body,new JSONObject(),false,200);
         testHelpers.forAllArrayHolds(array,expected);
     }
@@ -141,9 +141,9 @@ public class UserCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject transactionData = new JSONObject();
-        transactionData.put("in_id",1);
+        transactionData.put("in_id",2);
         body.put("transactionData",transactionData);
-        expected.put("id",1) ;
+        expected.put("id",2) ;
         testHelpers.testCommand("GetTransaction","User","transaction",body,expected,false,200);
 
     }

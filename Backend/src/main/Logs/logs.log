@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 Jun 06, 2021 2:58:36 AM NettyWebServer.NettyServer start
 INFO: Web Server is listening on http://127.0.0.1:8020/
 Jun 06, 2021 2:58:36 AM NettyWebServer.NettyServer start
@@ -234,3 +235,5 @@ INFO: SERVICE RESUMED
 Jun 19, 2021 1:44:27 AM Controller.Controller sendResponse
 INFO: SERVICE FROZE
 >>>>>>> 1ffe6bbf30b546bf92bbaab3776f45926da1893a
+=======
+>>>>>>> 1f57d8ecbaf0310ce4e49e491321cfddd077d65a

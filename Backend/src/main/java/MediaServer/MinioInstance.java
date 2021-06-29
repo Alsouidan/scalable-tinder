@@ -18,6 +18,7 @@ public class MinioInstance {
     private String minioPort=conf.getMinioPort();
     private String minioHost=conf.getMinioHost();
     private String minioBucketName=conf.getMinioBucketName();
+    private String minioHost=conf.getMinioHost();
     private MinioClient minioClient;
 
     public MinioInstance(){

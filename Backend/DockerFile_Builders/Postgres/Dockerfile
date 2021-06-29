@@ -1,6 +1,6 @@
 FROM postgres:latest
-COPY ./initDB.sql /docker-entrypoint-initdb.d
+COPY ./finalInitDB.sql /docker-entrypoint-initdb.d
 
 ENV POSTGRES_PASSWORD=vm
-ENV POSTGRES_DB=tinderdbTesting
+ENV POSTGRES_DB=tinderDB
 EXPOSE 5432

@@ -80,75 +80,75 @@ public class SqlScripts {
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('doja.cat@gmail.com', 123456789, false, false, NULL, 'Doja', 'Cat');\n" +
+            "\tVALUES ('doja.cat@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Doja', 'Cat');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('billie.eilish@gmail.com', 123456789, false, false, NULL, 'Billie', 'Eilish');\n" +
+            "\tVALUES ('billie.eilish@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Billie', 'Eilish');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('megan.stalyon@gmail.com', 123456789, false, false, NULL, 'Megan', 'The Stalyon');\n" +
+            "\tVALUES ('megan.stalyon@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Megan', 'The Stalyon');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('selena.gomez@gmail.com', 123456789, false, false, NULL, 'Selena', 'Gomez');\n" +
+            "\tVALUES ('selena.gomez@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Selena', 'Gomez');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('justin.bieber@gmail.com', 123456789, false, false, NULL, 'Justin', 'Bieber');\n" +
+            "\tVALUES ('justin.bieber@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Justin', 'Bieber');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('post.malone@gmail.com', 123456789, false, false, NULL, 'Post', 'Malone');\n" +
+            "\tVALUES ('post.malone@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Post', 'Malone');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('taylor.swift@gmail.com', 123456789, false, true, 5186975364203198, 'Taylor', 'Swift');\n" +
+            "\tVALUES ('taylor.swift@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, true, 5186975364203198, 'Taylor', 'Swift');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('dua.lippa@gmail.com', 123456789, false, false, NULL, 'Dua', 'Lippa');\n" +
+            "\tVALUES ('dua.lippa@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Dua', 'Lippa');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('jennifer.lopez@gmail.com', 123456789, false, false, NULL, 'Jennifer', 'Lopez');\n" +
+            "\tVALUES ('jennifer.lopez@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Jennifer', 'Lopez');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('mariah.carey@gmail.com', 123456789, false, true, 5192086875353209, 'Mariah', 'Carey');\n" +
+            "\tVALUES ('mariah.carey@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, true, 5192086875353209, 'Mariah', 'Carey');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('drake@gmail.com', 123456789, false, true, 5186425319208694, 'Aubrey', 'Drake');\n" +
+            "\tVALUES ('drake@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, true, 5186425319208694, 'Aubrey', 'Drake');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('dj.khaled@gmail.com', 123456789, false, false, NULL, 'DJ', 'Khaled');\n" +
+            "\tVALUES ('dj.khaled@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'DJ', 'Khaled');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('travis.scott@gmail.com', 123456789, false, false, NULL, 'Travis', 'Scott');\n" +
+            "\tVALUES ('travis.scott@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Travis', 'Scott');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('jack.harlow@gmail.com', 123456789, false, false, NULL, 'Jack', 'Harlow');\n" +
+            "\tVALUES ('jack.harlow@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Jack', 'Harlow');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('kanye.west@gmail.com', 123456789, false, true, 5192086975364205, 'Kanye', 'West');\n" +
+            "\tVALUES ('kanye.west@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, true, 5192086975364205, 'Kanye', 'West');\n" +
             "\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('donald.trump@gmail.com', 123456789, false, false, NULL, 'Donald', 'Trump');\n" +
+            "\tVALUES ('donald.trump@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Donald', 'Trump');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('liam.hemsworth@gmail.com', 123456789, false, false, NULL, 'Liam', 'Hemsworth');\n" +
+            "\tVALUES ('liam.hemsworth@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Liam', 'Hemsworth');\n" +
             "\t\n" +
             "\tINSERT INTO public.users(\n" +
             "\temail, password, is_banned, is_premium, credit_card_token, first_name, last_name)\n" +
-            "\tVALUES ('miley.cyrus@gmail.com', 123456789, false, false, NULL, 'Miley', 'Cyrus');\n" +
+            "\tVALUES ('miley.cyrus@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa', false, false, NULL, 'Miley', 'Cyrus');\n" +
             "\t\n" +
             "----------------------------------------------------------------------------------------------------\n" +
             "\n" +
@@ -159,7 +159,7 @@ public class SqlScripts {
             "\tVALUES ( 'hussein.badr@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa');\n" +
             "\tINSERT INTO public.moderators(\n" +
             "\temail, password)\n" +
-            "\tVALUES ( 'youssef.sameh@gmail.com', 123456789);\n" +
+            "\tVALUES ( 'youssef.sameh@gmail.com', '$2a$12$W5/J6mREYFuQoVxPUEgkUOt050wgiu/i.uKKEjLp6d3eb/83UprMa');\n" +
             "\n" +
             "----------------------------------------------------------------------------------------------------\n" +
             "\n" +

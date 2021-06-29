@@ -36,6 +36,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -57,6 +59,8 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
     private String RESPONSE_QUEUE_NAME = "SERVER-RESPONSE";
     private final Logger LOGGER = Logger.getLogger(RequestHandler.class.getName()) ;
     private boolean isTesting = false;
+
+  
     private Channel senderChannel;
 
     public RequestHandler(Channel channel, HashMap<String, ChannelHandlerContext> uuid, String RPC_QUEUE_REPLY_TO, String RPC_QUEUE_SEND_TO) {
@@ -232,11 +236,17 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
                         LOGGER.log(Level.INFO,"Request    :   " + new String(body, "UTF-8"));
                         LOGGER.log(Level.INFO,"Application    :   " + queue_name);
                         String responseMsg = new String(body, StandardCharsets.UTF_8);
+
                         responseMsg = responseMsg.substring(responseMsg.indexOf("{"));
+
                         org.json.JSONObject responseJson = new org.json.JSONObject(responseMsg);
                         if(responseJson.getString("command").equals("UpdateChat")||responseJson.getString("command").equals("UploadMedia"))
                             return;
                         String status=responseJson.get("status").toString() ;
+
+                        LOGGER.log(Level.INFO,"Application    :   " + responseJson + "12345678");
+                        LOGGER.log(Level.INFO,"Application    :   " + responseMsg +  "12345678");
+
                         FullHttpResponse response = new DefaultFullHttpResponse(
                                 HttpVersion.HTTP_1_1,
                                 mapToStatus(status),
@@ -347,9 +357,8 @@ public class RequestHandler extends ChannelInboundHandlerAdapter {
             try {
                 connection = connectionFactory.newConnection();
                 channel = connection.createChannel();
-
                 channel.basicPublish("", appName + "-Request", props, jsonRequest.toString().getBytes());
-                System.out.print(jsonRequest + "REQUEST")  ;
+
             }catch(IOException | TimeoutException e) {
 
                 e.printStackTrace();LOGGER.log(Level.SEVERE,e.getMessage(),e);

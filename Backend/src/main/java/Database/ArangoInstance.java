@@ -394,6 +394,7 @@ public class ArangoInstance {
                JSONObject object = new JSONObject(gson.toJson(profileView,ProfileViews.class).toString());
 
                insert("profileViews",object);
+               System.out.println("CREATED PROFILE VIEWS");
            }
         }
 

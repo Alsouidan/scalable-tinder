@@ -5,7 +5,6 @@ import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-
 import java.sql.*;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -24,6 +23,7 @@ public class PostgreSQL {
     private String DB_INIT_CONNECTIONS = conf.getPostgresqlInitConn();
     private String DB_MAX_CONNECTIONS = conf.getPostgresqlMaxConn();
     private PoolingDriver dbDriver;
+    private Boolean isPopulate = conf.getPostgresqlPopulate();
     private PoolingDataSource<PoolableConnection> dataSource;
     private PoolableConnectionFactory poolableConnectionFactory;
 

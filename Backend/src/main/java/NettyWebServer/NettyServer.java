@@ -6,7 +6,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-
+import Database.PostgreSQL;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.logging.Level;
@@ -36,7 +36,13 @@ public class NettyServer {
 
 //            System.err.println("Web Server is listening on http://127.0.0.1:" + port + '/');
             LOGGER.log(Level.INFO,"Web Server is listening on http://127.0.0.1:" + port + '/');
+            Boolean isPopulate = c.getPostgresqlPopulate();
+            if(isPopulate){
+                PostgreSQL db = new PostgreSQL();
+                db.populateDB();
+            }
             ch.closeFuture().sync();
+            
 
         }  
         catch (InterruptedException e) {
@@ -62,5 +68,6 @@ public class NettyServer {
                 e.printStackTrace();s.LOGGER.log(Level.SEVERE,e.getMessage(),e);
             }
         }
+      
     }
 }

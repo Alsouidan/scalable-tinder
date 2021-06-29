@@ -1,4 +1,4 @@
-package tests;
+package test;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class ModeratorCommandsTest {
-    HelpersTest testHelpers = new HelpersTest();
+    Helpers testHelpers = new Helpers();
 
     @Test
     @DisplayName("CreateBan Test")
@@ -204,20 +204,20 @@ public class ModeratorCommandsTest {
         testHelpers.testCommand("SignUp","Moderator","moderator",body,expected,false,200);
     }
 
-    @Test
-    @DisplayName("Update Ban Test")
-    public void updateBan(){
-        JSONObject body = new JSONObject();
-        JSONObject expected = new JSONObject();
-        JSONObject banData = new JSONObject();
-        String reason = "updated reason";
-        banData.put("id",3);
-        banData.put ("reason",reason);
-        expected.put("id",3);
-        expected.put("reason",reason);
-        body.put("banData",banData);
-        testHelpers.testCommand("UpdateBan","Moderator","ban",body,expected,false,200);
-    }
+//    @Test
+//    @DisplayName("Update Ban Test")
+//    public void updateBan(){
+//        JSONObject body = new JSONObject();
+//        JSONObject expected = new JSONObject();
+//        JSONObject banData = new JSONObject();
+//        String reason = "updated reason";
+//        banData.put("id",3);
+//        banData.put ("reason",reason);
+//        expected.put("id",3);
+//        expected.put("reason",reason);
+//        body.put("banData",banData);
+//        testHelpers.testCommand("UpdateBan","Moderator","ban",body,expected,false,200);
+//    }
 
     @Test
     @DisplayName("UpdateInterest Test")

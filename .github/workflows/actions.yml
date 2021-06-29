@@ -1,0 +1,11 @@
+name: Docker Compose Actions Workflow
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the stack
+        run: cd Backend && docker-compose down && docker volume prune && docker-compose up -d --build --force-recreate
+      - name: Test
+        run: docker exec -i $(docker ps -aqf "name=backend_server") mvn test

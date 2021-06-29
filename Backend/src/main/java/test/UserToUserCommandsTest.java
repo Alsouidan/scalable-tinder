@@ -1,4 +1,4 @@
-package tests;
+package test;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -10,7 +10,7 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserToUserCommandsTest {
-    HelpersTest testHelpers = new HelpersTest();
+    Helpers testHelpers = new Helpers();
 
     @Test
     @DisplayName("Create Block")
@@ -60,11 +60,11 @@ public class UserToUserCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject blockData = new JSONObject();
-        blockData.put("in_source_user", 19);
+        blockData.put("in_source_user", 3);
         body.put("blockData", blockData);
         body.put("page", 0);
         body.put("limit", 3);
-        expected.put("source_user_id", 19);
+        expected.put("source_user_id", 3);
         JSONArray array = testHelpers.testListCommand("GetSourceBlocks", "UserToUser", "blocks", body, new JSONObject(), false, 200);
         testHelpers.forAllArrayHolds(array, expected);
     }
@@ -177,9 +177,9 @@ public class UserToUserCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject interactionData = new JSONObject();
-        interactionData.put("id", 1);
+        interactionData.put("id", 3);
         body.put("interactionData", interactionData);
-        expected.put("id", 1);
+        expected.put("id", 3);
         testHelpers.testCommand("GetInteraction", "UserToUser", "interaction", body, expected, false, 200);
 
     }
@@ -261,7 +261,7 @@ public class UserToUserCommandsTest {
         JSONObject expected = new JSONObject();
         JSONObject interactionData = new JSONObject();
         interactionData.put("type","dislike");
-        interactionData.put("id",1);
+        interactionData.put("id",3);
         body.put("interactionData",interactionData);
         expected.put("type","dislike");
         testHelpers.testCommand("UpdateInteraction","UserToUser","interaction",body,expected,false,200);
@@ -337,7 +337,7 @@ public class UserToUserCommandsTest {
         JSONObject expected = new JSONObject();
         JSONObject reportData = new JSONObject();
         reportData.put("reason","Spamming");
-        reportData.put("id",1);
+        reportData.put("id",2);
         body.put("reportData",reportData);
         expected.put("reason","Spamming");
         testHelpers.testCommand("UpdateReport","UserToUser","report",body,expected,false,200);
@@ -386,7 +386,7 @@ public class UserToUserCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject userData = new JSONObject();
-        userData.put("id", 1);
+        userData.put("id", 15);
         body.put("userData", userData);
         testHelpers.testCommand("GetMatches", "UserToUser", "matches", body, expected, false, 200);
 
@@ -446,10 +446,10 @@ public class UserToUserCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject profileViewsData = new JSONObject();
-        profileViewsData.put("id","16");
+        profileViewsData.put("id","15");
         body.put("profileViewsData",profileViewsData);
         JSONObject profileViews = testHelpers.testObjectCommand("GetProfileViews","UserToUser","id",body,expected,false,200);
-        assertTrue(profileViews.getJSONObject("record").getString("_key").equals("16"));
+        assertTrue(profileViews.getJSONObject("record").getString("_key").equals("15"));
     }
 
     @Test

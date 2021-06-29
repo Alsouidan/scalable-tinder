@@ -20,6 +20,7 @@ public class SignIn extends ConcreteCommand {
     @Override
     public void doCustomCommand() {
         if(responseJson.getJSONArray("moderator").getJSONObject(0).length() == 0) {
+            System.out.println("HEREEEEEEEEEE 1");
             sendUnauthorized();
             return;
         }
@@ -34,8 +35,10 @@ public class SignIn extends ConcreteCommand {
                     .sign(algorithm);
             responseJson = new JSONObject();
             responseJson.put("token", token);
+            System.out.println("HEREEEEEEEEEE 3");    
         }
         else {
+            System.out.println("HEREEEEEEEEEE 2");
             sendUnauthorized();
             return;
         }

@@ -1,0 +1,25 @@
+config:
+  target: 'http://localhost:8021'
+  phases:
+    - duration: 60
+      arrivalRate: 20
+  payload:
+    # path is relative to the location of the test script
+    path: "username.csv"
+    fields:
+      - "email"
+      - "password"
+scenarios:
+  - name: "SignIn Moderator"
+    flow:
+    - post:
+        url: "/ss"
+        json:
+          moderatorData.email: "{{email}}"
+          moderatorData.password: "{{password}}"
+          command: "SignIn"
+          application: "Moderator"
+
+          capture:
+            - json: "$.token"
+              as: token

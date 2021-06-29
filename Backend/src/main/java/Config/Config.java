@@ -344,6 +344,8 @@ public class Config {
     public String getPostgresqlUserName() {return postgresqlConfig.getProperty("postgresql_username");}
     public String getPostgresqlPassword() {return postgresqlConfig.getProperty("postgresql_password");}
 
+    public Boolean getPostgresqlPopulate() {return (postgresqlConfig.getProperty("populate")).equals("true");}
+
     public String getPostgresqlHost() {return postgresqlConfig.getProperty("postgresql_host");}
 
     public String getPostgresqlPort() {return postgresqlConfig.getProperty("postgresql_port");}

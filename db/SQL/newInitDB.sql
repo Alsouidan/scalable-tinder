@@ -19,6 +19,7 @@ SET row_security = off;
 --
 -- Name: banData; Type: TYPE; Schema: public; Owner: postgres
 --
+SELECT current_database();
 
 CREATE TYPE public."banData" AS (
 	id integer,
@@ -112,6 +113,19 @@ CREATE TYPE public.interestinfo AS (
 
 
 ALTER TYPE public.interestinfo OWNER TO postgres;
+
+--
+-- Name: moderatorauthenticationinfo; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.moderatorauthenticationinfo AS (
+	id integer,
+	email character varying,
+	password character varying
+);
+
+
+ALTER TYPE public.moderatorauthenticationinfo OWNER TO postgres;
 
 --
 -- Name: moderatorinfo; Type: TYPE; Schema: public; Owner: postgres
@@ -210,19 +224,45 @@ CREATE TYPE public.userpublicdata AS (
 ALTER TYPE public.userpublicdata OWNER TO postgres;
 
 --
--- Name: moderatorAuthenticationInfo; Type: TYPE; Schema: public; Owner: postgres
+-- Name: checkuserpremiummirrorinteraction(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
+CREATE FUNCTION public.checkuserpremiummirrorinteraction(source_id integer, target_id integer) RETURNS TABLE(source_user_id integer, target_user_id integer, is_source_premium boolean, is_target_premium boolean, type public.interaction_type)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	RETURN QUERY
+	SELECT i.source_user_id,i.target_user_id,u.is_premium AS is_source_premium, u2.is_premium AS is_target_premium, i.type from public.interactions i
+	INNER JOIN "users" u ON i.source_user_id = u.id
+	INNER JOIN "users" u2 ON i.target_user_id = u2.id
+	WHERE i.target_user_id = source_id AND i.source_user_id = target_id
+	AND (i.type='like' or i.type='super_like')
+	AND u.is_premium = true;
+END;$$;
 
-CREATE TYPE public.moderatorAuthenticationInfo AS(
-    id INT,
-	email VARCHAR,
-	password VARCHAR
-);
+
+ALTER FUNCTION public.checkuserpremiummirrorinteraction(source_id integer, target_id integer) OWNER TO postgres;
+
+--
+-- Name: uspCheckIfUsersMatched(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public."uspCheckIfUsersMatched"(first_user_id integer, second_user_id integer) RETURNS TABLE(id integer, source_user_id integer, target_user_id integer, type public.interaction_type, created_at timestamp without time zone)
+    LANGUAGE plpgsql
+    AS $$
+ BEGIN
+ 	RETURN QUERY
+ 	SELECT * from public.interactions
+ 	WHERE (public.interactions.source_user_id = first_user_id AND
+ 		   public.interactions.target_user_id = second_user_id AND
+ 		   NOT public.interactions.type = 'dislike') OR
+ 		   (public.interactions.source_user_id = second_user_id AND
+ 		   public.interactions.target_user_id = first_user_id AND
+ 		   NOT public.interactions.type = 'dislike');
+ END;$$;
 
 
-ALTER TYPE public.moderatorAuthenticationInfo OWNER TO postgres;
-
+ALTER FUNCTION public."uspCheckIfUsersMatched"(first_user_id integer, second_user_id integer) OWNER TO postgres;
 
 --
 -- Name: uspCreateBan(integer, integer, character varying, date); Type: FUNCTION; Schema: public; Owner: postgres
@@ -290,10 +330,13 @@ ALTER FUNCTION public."uspDeleteBlock"(in_source integer, in_target integer) OWN
 CREATE FUNCTION public."uspDeleteInteraction"(interaction_id integer) RETURNS integer
     LANGUAGE plpgsql
     AS $$
+DECLARE
+	deleted_id INT;
 BEGIN
-	DELETE FROM public.interactions 
-	WHERE public.interactions.id = interaction_id;
-	RETURN interaction_id;
+	DELETE FROM public.interactions as i
+	WHERE i.id = interaction_id
+	RETURNING i.id INTO deleted_id;
+	RETURN deleted_id;
 END;$$;
 
 
@@ -306,10 +349,13 @@ ALTER FUNCTION public."uspDeleteInteraction"(interaction_id integer) OWNER TO po
 CREATE FUNCTION public."uspDeleteReport"(report_id integer) RETURNS integer
     LANGUAGE plpgsql
     AS $$
+DECLARE
+	deleted_id INT;
 BEGIN
-	DELETE FROM public.reports 
-	WHERE public.reports.id = report_id;
-	RETURN report_id;
+	DELETE FROM public.reports as r
+	WHERE r.id = report_id
+	RETURNING r.id into deleted_id; 
+	RETURN deleted_id;
 END;$$;
 
 
@@ -436,7 +482,7 @@ CREATE FUNCTION public."uspReadInteraction"(interaction_id integer) RETURNS TABL
 BEGIN
 	RETURN QUERY
 	SELECT * from public.interactions
-	WHERE public.interactions.id = uspReadInteraction.interaction_id;
+	WHERE public.interactions.id = interaction_id;
 END;$$;
 
 
@@ -580,7 +626,7 @@ CREATE FUNCTION public."uspReadUserSourceInteractions"(source_id integer, page i
 BEGIN
 	RETURN QUERY
 	SELECT * from public.interactions
-	WHERE public.interactions.source_user_id=uspReadUserSourceInteractions.source_id
+	WHERE public.interactions.source_user_id=source_id
 	LIMIT "limit" OFFSET page*"limit";
 END;$$;
 
@@ -597,7 +643,7 @@ CREATE FUNCTION public."uspReadUserTargetInteractions"(target_id integer, page i
 BEGIN
 	RETURN QUERY
 	SELECT * from public.interactions
-	WHERE public.interactions.target_user_id=uspReadUserTargetInteractions.target_id
+	WHERE public.interactions.target_user_id=target_id
 	LIMIT "limit" OFFSET page*"limit";
 END;$$;
 
@@ -653,41 +699,41 @@ ALTER FUNCTION public."uspUpdateBan"(in_id integer, mod_id integer, user_id inte
 -- Name: uspUpdateInteraction(integer, integer, integer, public.interaction_type); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public."uspUpdateInteraction"(id integer, source_user_id integer DEFAULT NULL::integer, target_user_id integer DEFAULT NULL::integer, type public.interaction_type DEFAULT NULL::public.interaction_type) RETURNS public.interactiondata
+CREATE FUNCTION public."uspUpdateInteraction"(int_id integer, source_id integer DEFAULT NULL::integer, target_id integer DEFAULT NULL::integer, int_type public.interaction_type DEFAULT NULL::public.interaction_type) RETURNS public.interactiondata
     LANGUAGE plpgsql
     AS $$
 DECLARE updated_interaction interactionData;
 BEGIN
     UPDATE interactions
-       SET source_user_id      = COALESCE(uspUpdateInteraction.source_user_id, interactions.source_user_id),
-           target_user_id      = COALESCE(uspUpdateInteraction.target_user_id, interactions.target_user_id),
-           "type"              = COALESCE(uspUpdateInteraction.type, interactions.type)
-     WHERE interactions.id = uspUpdateInteraction.id
+       SET source_user_id      = COALESCE(source_id, interactions.source_user_id),
+           target_user_id      = COALESCE(target_id, interactions.target_user_id),
+           "type"              = COALESCE(int_type, interactions.type)
+     WHERE interactions.id = int_id
      RETURNING * INTO updated_interaction;
 	 RETURN updated_interaction;
 END;$$;
 
 
-ALTER FUNCTION public."uspUpdateInteraction"(id integer, source_user_id integer, target_user_id integer, type public.interaction_type) OWNER TO postgres;
+ALTER FUNCTION public."uspUpdateInteraction"(int_id integer, source_id integer, target_id integer, int_type public.interaction_type) OWNER TO postgres;
 
 --
 -- Name: uspUpdateReport(integer, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public."uspUpdateReport"(id integer, reason character varying DEFAULT NULL::character varying) RETURNS public.reportdata
+CREATE FUNCTION public."uspUpdateReport"(report_id integer, updated_reason character varying DEFAULT NULL::character varying) RETURNS public.reportdata
     LANGUAGE plpgsql
     AS $$
 DECLARE updated_report reportData;
 BEGIN
     UPDATE reports
-       SET reason = COALESCE(uspUpdateReport.reason, reports.reason)
-     WHERE reports.id = uspUpdateReport.id
+       SET reason = COALESCE(updated_reason, reports.reason)
+     WHERE reports.id = report_id
 	 RETURNING * INTO updated_report;
      RETURN updated_report;
 END;$$;
 
 
-ALTER FUNCTION public."uspUpdateReport"(id integer, reason character varying) OWNER TO postgres;
+ALTER FUNCTION public."uspUpdateReport"(report_id integer, updated_reason character varying) OWNER TO postgres;
 
 --
 -- Name: uspUpdateTransaction(integer, integer, money); Type: FUNCTION; Schema: public; Owner: postgres
@@ -967,19 +1013,16 @@ ALTER FUNCTION public.usplogin(_email character varying) OWNER TO postgres;
 -- Name: uspmodlogin(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION uspModLogin(
-	_email VARCHAR(200)
-) RETURNS moderatorAuthenticationInfo
-LANGUAGE 'plpgsql'
-AS $$
+CREATE FUNCTION public.uspmodlogin(_email character varying) RETURNS public.moderatorauthenticationinfo
+    LANGUAGE plpgsql
+    AS $$
 DECLARE
     authenticated_moderator moderatorAuthenticationInfo;
 BEGIN
 	SELECT "id", email, password From public.moderators AS m WHERE m.email = _email
 	INTO authenticated_moderator;
 	RETURN authenticated_moderator;
-END;$$
-;
+END;$$;
 
 
 ALTER FUNCTION public.uspmodlogin(_email character varying) OWNER TO postgres;
@@ -1020,6 +1063,26 @@ $$;
 
 
 ALTER FUNCTION public.uspreportuser(_source_user_id integer, _target_user_id integer, _reason character varying, _created_at timestamp without time zone) OWNER TO postgres;
+
+--
+-- Name: uspsetuserpremium(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.uspsetuserpremium(_id integer) RETURNS public.userprofile
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    updated_user userProfile;
+BEGIN
+	UPDATE public.users AS u SET
+	 is_premium = true
+	 WHERE u.id = _id
+	 RETURNING id, email, first_name, last_name,is_premium INTO updated_user;
+	 RETURN updated_user;
+END;$$;
+
+
+ALTER FUNCTION public.uspsetuserpremium(_id integer) OWNER TO postgres;
 
 --
 -- Name: uspsignup(character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1335,8 +1398,9 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 -- Data for Name: bans; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+
 COPY public.bans (id, moderator_id, user_id, reason, created_at, expiry_date) FROM stdin;
-1	1	17	racist bio	2021-04-25 14:03:53.254663	2021-09-09
+1	1	17	racist bio	2021-06-28 11:32:54.584028	2021-09-09
 \.
 
 
@@ -1345,8 +1409,7 @@ COPY public.bans (id, moderator_id, user_id, reason, created_at, expiry_date) FR
 --
 
 COPY public.blocks (source_user_id, target_user_id, created_at) FROM stdin;
-1	2	2021-04-28 00:34:47.576
-19	18	2020-01-01 00:00:00
+19	18	2021-06-28 11:32:54.584028
 \.
 
 
@@ -1355,21 +1418,19 @@ COPY public.blocks (source_user_id, target_user_id, created_at) FROM stdin;
 --
 
 COPY public.interactions (id, source_user_id, target_user_id, type, created_at) FROM stdin;
-1	16	1	like	2021-04-25 14:03:53.254663
-2	16	12	dislike	2021-04-25 14:03:53.254663
-3	16	13	super_like	2021-04-25 14:03:53.254663
-4	16	14	dislike	2021-04-25 14:03:53.254663
-5	16	15	like	2021-04-25 14:03:53.254663
-6	1	16	like	2021-04-25 14:03:53.254663
-7	1	8	dislike	2021-04-25 14:03:53.254663
-8	8	12	dislike	2021-04-25 14:03:53.254663
-9	11	15	super_like	2021-04-25 14:03:53.254663
-10	15	11	super_like	2021-04-25 14:03:53.254663
-11	12	16	like	2021-04-25 14:03:53.254663
-12	18	19	like	2021-04-25 14:03:53.254663
-13	19	18	like	2021-04-25 14:03:53.254663
-16	21	17	super_like	2021-05-09 06:44:08.647744
-17	17	21	super_like	2021-05-09 06:44:17.507784
+1	16	1	like	2021-06-28 11:32:54.584028
+2	16	12	dislike	2021-06-28 11:32:54.584028
+3	16	13	super_like	2021-06-28 11:32:54.584028
+4	16	14	dislike	2021-06-28 11:32:54.584028
+5	16	15	like	2021-06-28 11:32:54.584028
+6	1	16	like	2021-06-28 11:32:54.584028
+7	1	8	dislike	2021-06-28 11:32:54.584028
+8	8	12	dislike	2021-06-28 11:32:54.584028
+9	11	15	super_like	2021-06-28 11:32:54.584028
+10	15	11	super_like	2021-06-28 11:32:54.584028
+11	12	16	like	2021-06-28 11:32:54.584028
+12	18	19	like	2021-06-28 11:32:54.584028
+13	19	18	like	2021-06-28 11:32:54.584028
 \.
 
 
@@ -1401,10 +1462,10 @@ COPY public.interests (id, name) FROM stdin;
 -- Data for Name: moderators; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.moderators (id, email, password) FROM stdin;
-1	hussein.badr@gmail.com	123456789
-2	youssef.sameh@gmail.com	123456789
-\.
+--COPY public.moderators (id, email, password) FROM stdin;
+--1	hussein.badr@gmail.com	123456789
+--2	youssef.sameh@gmail.com	123456789
+--\.
 
 
 --
@@ -1452,7 +1513,6 @@ COPY public.users (id, email, password, is_banned, is_premium, credit_card_token
 17	donald.trump@gmail.com	123456789	f	f	\N	Donald	Trump
 18	liam.hemsworth@gmail.com	123456789	f	f	\N	Liam	Hemsworth
 19	miley.cyrus@gmail.com	123456789	f	f	\N	Miley	Cyrus
-21	alsouidan@gmail.com	$2a$12$.JfTznVMAFLVQBVm/bnJzeC3wt0JfQEpQP7DcjkHd9E0bs9yRAQHu	f	f	\N	Ali	Souidan
 \.
 
 
@@ -1460,14 +1520,14 @@ COPY public.users (id, email, password, is_banned, is_premium, credit_card_token
 -- Name: bans_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bans_id_seq', 1, true);
+--SELECT pg_catalog.setval('public.bans_id_seq', 1, true);
 
 
 --
 -- Name: interactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.interactions_id_seq', 17, true);
+SELECT pg_catalog.setval('public.interactions_id_seq', 13, true);
 
 
 --
@@ -1481,7 +1541,7 @@ SELECT pg_catalog.setval('public.interests_id_seq', 16, true);
 -- Name: moderators_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.moderators_id_seq', 2, true);
+--SELECT pg_catalog.setval('public.moderators_id_seq', 2, true);
 
 
 --
@@ -1502,7 +1562,7 @@ SELECT pg_catalog.setval('public.transactions_id_seq', 4, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 21, true);
+SELECT pg_catalog.setval('public.users_id_seq', 19, true);
 
 
 --

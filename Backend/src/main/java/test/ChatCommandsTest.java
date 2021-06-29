@@ -1,4 +1,4 @@
-package tests;
+package test;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ChatCommandsTest {
-    HelpersTest testHelpers = new HelpersTest();
+    
+    Helpers testHelpers = new Helpers();
 
     @Test
     @DisplayName("CreateChat for unmatched users")
@@ -29,8 +30,8 @@ public class ChatCommandsTest {
         JSONObject body = new JSONObject();
         JSONObject expected = new JSONObject();
         JSONObject chatData = new JSONObject();
-        chatData.put("userAId",1);
-        chatData.put("userBId",16);
+        chatData.put("userAId",11);
+        chatData.put("userBId",15);
         body.put("chatData",chatData);
         testHelpers.testObjectCommand("CreateChat","Chat","id",body,expected,false,200);
 
