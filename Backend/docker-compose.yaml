@@ -18,11 +18,7 @@ services:
       - "25672:25672"
       - "15671:15671"
       - "15672:15672"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+   
   rabbitmq_queues:
     image: scalable2021/rabbitmq_queues
     depends_on:
@@ -121,21 +117,21 @@ services:
         build:
           context: .
           dockerfile: DockerFile_Builders/ArangoDB/Dockerfile
-        environment:
-          ARANGO_ROOT_PASSWORD: rootpassword
-          ARANGO_DB: tinderDB
-          ARANGODB_USERNAME: root
-          ARANGODB_PASSWORD: rootpassword
-          ARANGODB_COL1: users
-          ARANGODB_COL2: chats
-          ARANGODB_COL3: profileViews
-          ARANGODB_COL4: notifications
-        expose:
-            - "8529"
-        volumes:
-          - arangodb_data_container:/var/lib/arangodb3
-          - arangodb_apps_data_container:/var/lib/arangodb3-apps
-        command: arangod
+#        environment:
+#          ARANGO_ROOT_PASSWORD: rootpassword
+#          ARANGO_DB: tinderDB
+#          ARANGODB_USERNAME: root
+#          ARANGODB_PASSWORD: rootpassword
+#          ARANGODB_COL1: users
+#          ARANGODB_COL2: chats
+#          ARANGODB_COL3: profileViews
+#          ARANGODB_COL4: notifications
+#        expose:
+#            - "8529"
+#        volumes:
+#          - arangodb_data_container:/var/lib/arangodb3
+#          - arangodb_apps_data_container:/var/lib/arangodb3-apps
+
 
 
   minio2:
